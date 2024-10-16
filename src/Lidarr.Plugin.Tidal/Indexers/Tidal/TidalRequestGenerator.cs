@@ -1,10 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.IndexerSearch.Definitions;
 using NzbDrone.Plugin.Tidal;
-using TagLib.Ogg;
 
 namespace NzbDrone.Core.Indexers.Tidal
 {
@@ -15,42 +15,15 @@ namespace NzbDrone.Core.Indexers.Tidal
 
         public virtual IndexerPageableRequestChain GetRecentRequests()
         {
+            // this is a lazy implementation, just here so that lidarr has something to test against when saving settings 
             var pageableRequests = new IndexerPageableRequestChain();
 
-            // TODO: implement this
-
-            /*Dictionary<string, string> data = new()
-            {
-                { "gateway_input", new JObject()
-                    {
-                        ["PAGE"] = "channels/explore",
-                        ["VERSION"] = "2.3",
-                        ["SUPPORT"] = new JObject()
-                        {
-                            ["grid"] = new JArray()
-                            {
-                                "channel",
-                                "album"
-                            },
-                            ["horizontal-grid"] = new JArray()
-                            {
-                                "album"
-                            }
-                        },
-                        ["LANG"] = "us"
-                    }.ToString(Newtonsoft.Json.Formatting.None)
-                }
-            };
-
-            var url = TidalAPI.Instance!.GetGWUrl("page.get", data);
-            var req = new IndexerRequest(url, HttpAccept.Json);
-            req.HttpRequest.Method = System.Net.Http.HttpMethod.Post;
-            req.HttpRequest.Cookies.Add("sid", TidalAPI.Instance.Client.SID);
+            var req = GetRequests("never gonna give you up", 10).First();
 
             pageableRequests.Add(new[]
             {
                 req
-            });*/
+            });
 
             return pageableRequests;
         }
@@ -73,12 +46,12 @@ namespace NzbDrone.Core.Indexers.Tidal
             return chain;
         }
 
-        private IEnumerable<IndexerRequest> GetRequests(string searchParameters)
+        private IEnumerable<IndexerRequest> GetRequests(string searchParameters, int limit = 1000)
         {
             var data = new Dictionary<string, string>()
             {
                 ["query"] = searchParameters,
-                ["limit"] = "1000",
+                ["limit"] = limit.ToString(),
                 ["types"] = "albums,tracks",
                 ["offset"] = "0",
             };

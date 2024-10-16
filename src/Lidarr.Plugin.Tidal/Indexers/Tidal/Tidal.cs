@@ -18,9 +18,9 @@ namespace NzbDrone.Core.Indexers.Tidal
         public override int PageSize => 100;
         public override TimeSpan RateLimit => new TimeSpan(0);
 
-        private readonly ITidalProxy _TidalProxy;
+        private readonly ITidalProxy _tidalProxy;
 
-        public Tidal(ITidalProxy TidalProxy,
+        public Tidal(ITidalProxy tidalProxy,
             IHttpClient httpClient,
             IIndexerStatusService indexerStatusService,
             IConfigService configService,
@@ -28,15 +28,20 @@ namespace NzbDrone.Core.Indexers.Tidal
             Logger logger)
             : base(httpClient, indexerStatusService, configService, parsingService, logger)
         {
-            _TidalProxy = TidalProxy;
-            if (!string.IsNullOrEmpty(Settings.ConfigPath))
-                TidalAPI.Initialize(Settings.AudioQuality, Settings.ConfigPath);
+            _tidalProxy = tidalProxy;
         }
 
         public override IIndexerRequestGenerator GetRequestGenerator()
         {
             if (!string.IsNullOrEmpty(Settings.ConfigPath))
-                TidalAPI.Initialize(Settings.AudioQuality, Settings.ConfigPath);
+            {
+                TidalAPI.Initialize(Settings.AudioQuality, Settings.ConfigPath, _logger);
+                bool success = TidalAPI.Instance.Client.Login(Settings.RedirectUrl).Result;
+                if (!success)
+                {
+                    return null;
+                }
+            }
             else
                 return null;
 

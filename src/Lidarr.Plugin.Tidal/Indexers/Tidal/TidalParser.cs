@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Plugin.Tidal;
@@ -16,9 +17,10 @@ namespace NzbDrone.Core.Indexers.Tidal
         public IList<ReleaseInfo> ParseResponse(IndexerResponse response)
         {
             var torrentInfos = new List<ReleaseInfo>();
+            var content = new HttpResponse<TidalSearchResponse>(response.HttpResponse).Content;
 
-            var jsonResponse = new HttpResponse<TidalSearchResponse>(response.HttpResponse).Resource;
-
+            Console.WriteLine(content);
+            var jsonResponse = JObject.Parse(content).ToObject<TidalSearchResponse>();
             var releases = jsonResponse.AlbumResults.Items.Select(result => ProcessAlbumResult(result)).ToArray();
 
             foreach (var task in releases)

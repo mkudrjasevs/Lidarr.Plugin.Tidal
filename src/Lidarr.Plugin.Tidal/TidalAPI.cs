@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using NLog;
 using TidalSharp;
 using TidalSharp.Data;
 
@@ -11,11 +12,12 @@ namespace NzbDrone.Plugin.Tidal
     {
         public static TidalAPI Instance { get; private set; }
 
-        public static void Initialize(AudioQuality quality, string configDir)
+        public static void Initialize(AudioQuality quality, string configDir, Logger logger)
         {
             if (Instance != null)
                 return;
             Instance = new TidalAPI(quality, configDir);
+            logger.Info("Tidal URL; use this to login: " + Instance.Client.GetPkceLoginUrl());
         }
 
         private TidalAPI(AudioQuality quality, string configDir)
@@ -37,6 +39,7 @@ namespace NzbDrone.Plugin.Tidal
                 parameters["limit"] = "1000";
 
             StringBuilder stringBuilder = new("https://api.tidal.com/v1/");
+            stringBuilder.Append(method);
             for (var i = 0; i < parameters.Count; i++)
             {
                 var start = i == 0 ? "?" : "&";
