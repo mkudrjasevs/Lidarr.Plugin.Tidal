@@ -29,18 +29,16 @@ namespace NzbDrone.Core.Indexers.Tidal
             : base(httpClient, indexerStatusService, configService, parsingService, logger)
         {
             _TidalProxy = TidalProxy;
+            if (!string.IsNullOrEmpty(Settings.ConfigPath))
+                TidalAPI.Initialize(Settings.AudioQuality, Settings.ConfigPath);
         }
 
         public override IIndexerRequestGenerator GetRequestGenerator()
         {
-            if (string.IsNullOrEmpty(Settings.Arl))
-            {
-                // TODO: auto grab token
-                Settings.Arl = "";
+            if (!string.IsNullOrEmpty(Settings.ConfigPath))
+                TidalAPI.Initialize(Settings.AudioQuality, Settings.ConfigPath);
+            else
                 return null;
-            }
-
-            TidalAPI.Instance?.CheckAndSetToken(Settings.Arl);
 
             return new TidalRequestGenerator()
             {

@@ -1,15 +1,15 @@
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.IndexerSearch.Definitions;
 using NzbDrone.Plugin.Tidal;
+using TagLib.Ogg;
 
 namespace NzbDrone.Core.Indexers.Tidal
 {
     public class TidalRequestGenerator : IIndexerRequestGenerator
     {
-        private const int PageSize = 100;
-        private const int MaxPages = 30;
         public TidalIndexerSettings Settings { get; set; }
         public Logger Logger { get; set; }
 
@@ -59,7 +59,6 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             var chain = new IndexerPageableRequestChain();
 
-            chain.AddTier(GetRequests($"artist:\"{searchCriteria.ArtistQuery}\" album:\"{searchCriteria.AlbumQuery}\""));
             chain.AddTier(GetRequests($"{searchCriteria.ArtistQuery} {searchCriteria.AlbumQuery}"));
 
             return chain;
@@ -69,7 +68,6 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             var chain = new IndexerPageableRequestChain();
 
-            chain.AddTier(GetRequests($"artist:\"{searchCriteria.ArtistQuery}\""));
             chain.AddTier(GetRequests(searchCriteria.ArtistQuery));
 
             return chain;
@@ -77,26 +75,19 @@ namespace NzbDrone.Core.Indexers.Tidal
 
         private IEnumerable<IndexerRequest> GetRequests(string searchParameters)
         {
-            // TODO: implement this
-            return null;
-            /*for (var page = 0; page < MaxPages; page++)
+            var data = new Dictionary<string, string>()
             {
-                JObject data = new()
-                {
-                    ["query"] = searchParameters,
-                    ["start"] = $"{page * PageSize}",
-                    ["nb"] = $"{PageSize}",
-                    ["output"] = "ALBUM",
-                    ["filter"] = "ALL",
-                };
+                ["query"] = searchParameters,
+                ["limit"] = "1000",
+                ["types"] = "albums,tracks",
+                ["offset"] = "0",
+            };
 
-                var url = TidalAPI.Instance!.GetGWUrl("search.music");
-                var req = new IndexerRequest(url, HttpAccept.Json); ;
-                req.HttpRequest.SetContent(data.ToString(Newtonsoft.Json.Formatting.None));
-                req.HttpRequest.Method = System.Net.Http.HttpMethod.Post;
-                req.HttpRequest.Cookies.Add("sid", TidalAPI.Instance.Client.SID);
-                yield return req;
-            }*/
+            var url = TidalAPI.Instance!.GetAPIUrl("search", data);
+            var req = new IndexerRequest(url, HttpAccept.Json);
+            req.HttpRequest.Method = System.Net.Http.HttpMethod.Get;
+            req.HttpRequest.Headers.Add("Authorization", $"{TidalAPI.Instance.Client.ActiveUser.TokenType} {TidalAPI.Instance.Client.ActiveUser.AccessToken}");
+            yield return req;
         }
     }
 }

@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NzbDrone.Common.Http;
-using NzbDrone.Core.Download.Clients.Tidal;
 using NzbDrone.Core.Parser.Model;
-using System.Collections.Concurrent;
 using NzbDrone.Plugin.Tidal;
-using System.Globalization;
+using TidalSharp.Data;
 
 namespace NzbDrone.Core.Indexers.Tidal
 {
@@ -20,91 +17,61 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             var torrentInfos = new List<ReleaseInfo>();
 
-            // TODO: implement this
+            var jsonResponse = new HttpResponse<TidalSearchResponse>(response.HttpResponse).Resource;
 
-            /*TidalSearchResponse jsonResponse = null;
-            if (response.HttpRequest.Url.FullUri.Contains("method=page.get", StringComparison.InvariantCulture)) // means we're asking for a channel and need to parse it accordingly
+            var releases = jsonResponse.AlbumResults.Items.Select(result => ProcessAlbumResult(result)).ToArray();
+
+            foreach (var task in releases)
             {
-                var task = GenerateSearchResponseFromChannelData(response.Content);
-                task.Wait();
-                jsonResponse = task.Result;
+                torrentInfos.Add(task);
             }
-            else
-                jsonResponse = new HttpResponse<TidalSearchResponseWrapper>(response.HttpResponse).Resource.Results;
 
-            var tasks = jsonResponse.Data.Select(result => ProcessResultAsync(result)).ToArray();
-
-            Task.WaitAll(tasks);
-
-            foreach (var task in tasks)
+            foreach (var track in jsonResponse.TrackResults.Items)
             {
-                if (task.Result != null)
-                    torrentInfos.AddRange(task.Result);
-            }*/
+                // make sure the album hasn't already been processed before doing this
+                if (!jsonResponse.AlbumResults.Items.Any(a => a.Id == track.Album.Id))
+                {
+                    var processTrackTask = ProcessTrackAlbumResultAsync(track);
+                    processTrackTask.Wait();
+                    torrentInfos.Add(processTrackTask.Result);
+                }
+            }
 
             return torrentInfos
                 .OrderByDescending(o => o.Size)
                 .ToArray();
         }
 
-        private async Task<IList<ReleaseInfo>> ProcessResultAsync(object result) // TODO: result should be an album object, but i dont have that implemented yet obviously
+        private ReleaseInfo ProcessAlbumResult(TidalSearchResponse.Album result)
         {
-            var torrentInfos = new List<ReleaseInfo>();
-
-            // TODO: process results
-            await Task.Delay(100);
-            /*var albumPage = await TidalAPI.Instance.Client.GWApi.GetAlbumPage(long.Parse(result.AlbumId, CultureInfo.InvariantCulture));
-
-            var missing = albumPage["SONGS"]!["data"]!.Count(d => d["FILESIZE"]!.ToString() == "0");
-            if (Settings.HideAlbumsWithMissing && missing > 0)
-                return null; // return null if missing any tracks
-
-            var size128 = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_MP3_128"]!.Value<long>());
-            var size320 = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_MP3_320"]!.Value<long>());
-            var sizeFlac = albumPage["SONGS"]!["data"]!.Sum(d => d["FILESIZE_FLAC"]!.Value<long>());
-
-            // MP3 128
-            torrentInfos.Add(ToReleaseInfo(result, 1, size128));
-
-            // MP3 320
-            if (TidalAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_hq"]!.Value<bool>())
-            {
-                torrentInfos.Add(ToReleaseInfo(result, 3, size320));
-            }
-
-            // FLAC
-            if (TidalAPI.Instance.Client.GWApi.ActiveUserData["USER"]!["OPTIONS"]!["web_lossless"]!.Value<bool>())
-            {
-                torrentInfos.Add(ToReleaseInfo(result, 9, sizeFlac));
-            }*/
-
-            return torrentInfos;
+            var quality = Enum.Parse<AudioQuality>(result.AudioQuality);
+            return ToReleaseInfo(result, quality, 0);
         }
 
-        private static ReleaseInfo ToReleaseInfo(object x, int bitrate, long size) // TODO: x should be an album object, but i dont have that implemented yet obviously
+        private async Task<ReleaseInfo> ProcessTrackAlbumResultAsync(TidalSearchResponse.Track result)
         {
-            return null;
-            /*var publishDate = DateTime.UtcNow;
+            var album = (await TidalAPI.Instance.Client.API.GetAlbum(result.Album.Id)).ToObject<TidalSearchResponse.Album>(); // track albums hold much less data so we get the full one
+            var quality = Enum.Parse<AudioQuality>(album.AudioQuality);
+            return ToReleaseInfo(album, quality, 0);
+        }
+
+        private static ReleaseInfo ToReleaseInfo(TidalSearchResponse.Album x, AudioQuality bitrate, long size)
+        {
+            var publishDate = DateTime.UtcNow;
             var year = 0;
-            if (DateTime.TryParse(x.DigitalReleaseDate, out var digitalReleaseDate))
+            if (DateTime.TryParse(x.ReleaseDate, out var digitalReleaseDate))
             {
                 publishDate = digitalReleaseDate;
                 year = publishDate.Year;
             }
-            else if (DateTime.TryParse(x.PhysicalReleaseDate, out var physicalReleaseDate))
-            {
-                publishDate = physicalReleaseDate;
-                year = publishDate.Year;
-            }
 
-            // TODO: correct url
-            var url = $"https://Tidal.com/album/{x.AlbumId}";
+            var url = x.Url;
 
             var result = new ReleaseInfo
             {
-                Guid = $"Tidal-{x.AlbumId}-{bitrate}",
-                Artist = x.ArtistName,
-                Album = x.AlbumTitle,
+                Guid = $"Tidal-{x.Id}-{bitrate}",
+                Artist = x.Artists.First().Name,
+                Album = x.Title,
                 DownloadUrl = url,
                 InfoUrl = url,
                 PublishDate = publishDate,
@@ -114,27 +81,38 @@ namespace NzbDrone.Core.Indexers.Tidal
             string format;
             switch (bitrate)
             {
-                case 9:
+                // TODO: no clue if this is right (or if it even matters)
+                case AudioQuality.LOW:
+                    result.Codec = "AAC";
+                    result.Container = "96";
+                    format = "M4A (AAC) 96kbps";
+                    break;
+                case AudioQuality.HIGH:
+                    result.Codec = "AAC";
+                    result.Container = "320";
+                    format = "M4A (AAC) 320kbps";
+                    break;
+                case AudioQuality.LOSSLESS:
                     result.Codec = "FLAC";
                     result.Container = "Lossless";
-                    format = "FLAC";
+                    format = "M4A (FLAC) Lossless";
                     break;
-                case 3:
-                    result.Codec = "MP3";
-                    result.Container = "320";
-                    format = "MP3 320";
+                case AudioQuality.HI_RES:
+                    result.Codec = "FLAC";
+                    result.Container = "Hi-Res";
+                    format = "M4A (FLAC) Hi-Res";
                     break;
-                case 1:
-                    result.Codec = "MP3";
-                    result.Container = "128";
-                    format = "MP3 128";
+                case AudioQuality.HI_RES_LOSSLESS:
+                    result.Codec = "FLAC";
+                    result.Container = "Lossless";
+                    format = "M4A (FLAC) Hi-Res Lossless";
                     break;
                 default:
                     throw new NotImplementedException();
             }
 
             result.Size = size;
-            result.Title = $"{x.ArtistName} - {x.AlbumTitle}";
+            result.Title = $"{x.Artists.First().Name} - {x.Title}";
 
             if (year > 0)
             {
@@ -148,7 +126,7 @@ namespace NzbDrone.Core.Indexers.Tidal
 
             result.Title += $" [{format}] [WEB]";
 
-            return result;*/
+            return result;
         }
     }
 }

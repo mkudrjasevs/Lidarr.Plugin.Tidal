@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\TidalSharp\TidalSharp\TidalSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="FluentValidation">
       <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\old\Lidarr\FluentValidation.dll</HintPath>
       <Private>False</Private>
