@@ -29,12 +29,6 @@ This requires your Lidarr setup to be using the `plugins` branch. My docker-comp
 
 ## Licensing
 All of these libraries have been merged into the final plugin assembly due to (what I believe is) a bug in Lidarr's plugin system.
-- [TidalLib](https://github.com/yaronzz/TidalLib) is licensed under the GPL-3.0 license. See [LICENSE](https://github.com/yaronzz/TidalLib/blob/main/LICENSE) for the full license.
-
--- TODO
+- [TidalSharp](https://github.com/TrevTV/TidalSharp) is licensed under the GPL-3.0 license. See [LICENSE](https://github.com/TrevTV/TidalSharp/blob/main/LICENSE) for the full license.
 - [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) is licensed under the MIT license. See [LICENSE](https://github.com/JamesNK/Newtonsoft.Json/blob/master/LICENSE.md) for the full license.
-- [BouncyCastle.Cryptography](https://github.com/bcgit/bc-csharp) is licensed under the MIT license. See [LICENSE](https://github.com/bcgit/bc-csharp/blob/master/LICENSE.md) for the full license.
 - [TagLibSharp](https://github.com/mono/taglib-sharp) is licensed under the LGPL-2.1 license. See [COPYING](https://github.com/mono/taglib-sharp/blob/main/COPYING) for the full license.
-- [AngleSharp](https://github.com/AngleSharp/AngleSharp) is licensed under the MIT license. See [LICENSE](https://github.com/AngleSharp/AngleSharp/blob/devel/LICENSE) for the full license.
-- [AngleSharp.XPath](https://github.com/AngleSharp/AngleSharp.XPath) is licensed under the MIT license. See [LICENSE](https://github.com/AngleSharp/AngleSharp.XPath/blob/master/LICENSE) for the full license.
-- [SkiaSharp](https://github.com/mono/SkiaSharp) is licensed under the MIT license. See [LICENSE](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md) for the full license.

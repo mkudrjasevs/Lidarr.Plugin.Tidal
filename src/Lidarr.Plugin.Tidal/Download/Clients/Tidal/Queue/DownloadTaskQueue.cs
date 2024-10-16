@@ -52,7 +52,6 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                 try
                 {
                     var token = GetTokenForItem(item);
-                    item.EnsureValidity();
                     item.Status = DownloadItemStatus.Downloading;
                     await task;
                 }

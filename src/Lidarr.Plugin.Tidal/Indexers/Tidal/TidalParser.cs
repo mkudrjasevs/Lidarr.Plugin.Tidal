@@ -104,7 +104,7 @@ namespace NzbDrone.Core.Indexers.Tidal
                     break;
                 case AudioQuality.HI_RES_LOSSLESS:
                     result.Codec = "FLAC";
-                    result.Container = "Lossless";
+                    result.Container = "Hi-Res Lossless";
                     format = "M4A (FLAC) Hi-Res Lossless";
                     break;
                 default:

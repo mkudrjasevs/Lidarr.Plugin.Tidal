@@ -3,28 +3,27 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace NzbDrone.Core.Download.Clients.Tidal
 {
     internal static class MetadataUtilities
     {
-        // TODO: implement this
-        /*public static string GetFilledTemplate(string template, string ext, JToken TidalPage, JToken TidalAlbumPage)
+        public static string GetFilledTemplate(string template, string ext, JObject tidalPage, JObject tidalAlbum)
         {
-            var releaseDate = DateTime.Parse(TidalPage["DATA"]!["PHYSICAL_RELEASE_DATE"]!.ToString(), CultureInfo.InvariantCulture);
+            var releaseDate = DateTime.Parse(tidalAlbum["releaseDate"]!.ToString(), CultureInfo.InvariantCulture);
             return GetFilledTemplate_Internal(template,
-                TidalPage["DATA"]!["SNG_TITLE"]!.ToString(),
-                TidalPage["DATA"]!["ALB_TITLE"]!.ToString(),
-                TidalAlbumPage["DATA"]!["ART_NAME"]!.ToString(),
-                TidalPage["DATA"]!["ART_NAME"]!.ToString(),
-                TidalAlbumPage["DATA"]!["ARTISTS"]!.Select(a => a["ART_NAME"]!.ToString()).ToArray(),
-                TidalPage["DATA"]!["ARTISTS"]!.Select(a => a["ART_NAME"]!.ToString()).ToArray(),
-                $"{(int)TidalPage["DATA"]!["TRACK_NUMBER"]!:00}",
-                TidalAlbumPage["SONGS"]!["total"]!.ToString(),
+                tidalPage["title"]!.ToString(),
+                tidalPage["album"]!["title"]!.ToString(),
+                tidalAlbum["artist"]!["name"]!.ToString(),
+                tidalPage["artist"]!["name"]!.ToString(),
+                tidalAlbum["artists"]!.Select(a => a["name"]!.ToString()).ToArray(),
+                tidalPage!["artists"]!.Select(a => a["name"]!.ToString()).ToArray(),
+                $"{(int)tidalPage["trackNumber"]!:00}",
+                tidalAlbum["numberOfTracks"]!.ToString(),
                 releaseDate.Year.ToString(CultureInfo.InvariantCulture),
                 ext);
-        }*/
-        public static string GetFilledTemplate(string template, string ext, object tidalPage, object tidalAlbumPage) { return ""; }
+        }
 
         private static string GetFilledTemplate_Internal(string template, string title, string album, string albumArtist, string artist, string[] albumArtists, string[] artists, string track, string trackCount, string year, string ext)
         {

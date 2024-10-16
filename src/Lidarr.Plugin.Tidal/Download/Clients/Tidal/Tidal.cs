@@ -68,7 +68,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal
 
         protected override void Test(List<ValidationFailure> failures)
         {
-            // given the way the code is setup, we don't really need to check for a valid arl here
+            // given the way the code is setup, we don't really need to do anything here
         }
     }
 }

@@ -18,8 +18,6 @@ namespace NzbDrone.Core.Download.Clients.Tidal
     {
         private static readonly TidalSettingsValidator Validator = new TidalSettingsValidator();
 
-        // TODO: determine lyric stuff, no clue if or how tidal does them
-
         [FieldDefinition(0, Label = "Download Path", Type = FieldType.Textbox)]
         public string DownloadPath { get; set; } = "";
 

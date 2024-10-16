@@ -7,10 +7,14 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using NLog;
 using NzbDrone.Common.Instrumentation.Extensions;
+using NzbDrone.Core.Indexers.Tidal;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Plugin.Tidal;
+using TidalSharp;
+using TidalSharp.Data;
 
 namespace NzbDrone.Core.Download.Clients.Tidal.Queue
 {
@@ -18,15 +22,30 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
     {
         public static async Task<DownloadItem> From(RemoteAlbum remoteAlbum)
         {
-            /*string url = remoteAlbum.Release.DownloadUrl.Trim();
-            Bitrate bitrate;
+            string url = remoteAlbum.Release.DownloadUrl.Trim();
+            AudioQuality quality;
 
-            if (remoteAlbum.Release.Codec == "FLAC")
-                bitrate = Bitrate.FLAC;
-            else if (remoteAlbum.Release.Container == "320")
-                bitrate = Bitrate.MP3_320;
-            else
-                bitrate = Bitrate.MP3_128;
+            switch (remoteAlbum.Release.Container)
+            {
+                case "96":
+                    quality = AudioQuality.LOW;
+                    break;
+                case "320":
+                    quality = AudioQuality.LOW;
+                    break;
+                case "Lossless":
+                    quality = AudioQuality.LOW;
+                    break;
+                case "Hi-Res":
+                    quality = AudioQuality.LOW;
+                    break;
+                case "Hi-Res Lossless":
+                    quality = AudioQuality.LOW;
+                    break;
+                default:
+                    quality = AudioQuality.HIGH;
+                    break;
+            }
 
             DownloadItem item = null;
             if (url.Contains("Tidal", StringComparison.CurrentCultureIgnoreCase))
@@ -37,21 +56,16 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                     {
                         ID = Guid.NewGuid().ToString(),
                         Status = DownloadItemStatus.Queued,
-                        Bitrate = bitrate,
+                        Bitrate = quality,
                         RemoteAlbum = remoteAlbum,
-                        _TidalUrl = TidalUrl,
+                        _tidalUrl = TidalUrl,
                     };
 
                     await item.SetTidalData();
                 }
             }
 
-            return item;*/
-
-
-            // TODO: reimpl this
-            await Task.Delay(100);
-            return null;
+            return item;
         }
 
         public string ID { get; private set; }
@@ -64,8 +78,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
 
         public string DownloadFolder { get; private set; }
 
-        // TODO: reimpl Bitrate enum depending on Tidal
-        public dynamic Bitrate { get; private set; }
+        public AudioQuality Bitrate { get; private set; }
         public DownloadItemStatus Status { get; set; }
 
         public float Progress { get => DownloadedSize / (float)Math.Max(TotalSize, 1); }
@@ -74,10 +87,9 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
 
         public int FailedTracks { get; private set; }
 
-        // TODO: reimpl these (without dynamic) after api impl
-        private (long id, long size)[] _tracks = Array.Empty<(long id, long size)>();
-        //private dynamic _tidalUrl;
-        private dynamic _tidalAlbum = null;
+        private (string id, long size)[] _tracks = Array.Empty<(string id, long size)>();
+        private TidalURL _tidalUrl;
+        private JObject _tidalAlbum = null;
         private DateTime _lastARLValidityCheck = DateTime.MinValue;
 
         public async Task DoDownload(TidalSettings settings, Logger logger, CancellationToken cancellation = default)
@@ -115,15 +127,15 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                 Status = DownloadItemStatus.Completed;
         }
 
-        private async Task DoTrackDownload(long track, TidalSettings settings, CancellationToken cancellation = default)
+        private async Task DoTrackDownload(string track, TidalSettings settings, CancellationToken cancellation = default)
         {
-            var page = await TidalAPI.Instance.Client.GWApi.GetTrackPage(track, cancellation);
-            var songTitle = page["DATA"]!["SNG_TITLE"]!.ToString();
-            var artistName = page["DATA"]!["ART_NAME"]!.ToString();
-            var albumTitle = page["DATA"]!["ALB_TITLE"]!.ToString();
+            var page = await TidalAPI.Instance.Client.API.GetTrack(track, cancellation);
+            var songTitle = page["title"]!.ToString();
+            var artistName = page["artist"]!["name"]!.ToString();
+            var albumTitle = page["album"]!["title"]!.ToString();
             var duration = page["DATA"]!["DURATION"]!.Value<int>();
 
-            var ext = Bitrate == Bitrate.FLAC ? "flac" : "mp3";
+            var ext = await TidalAPI.Instance.Client.Downloader.GetExtensionForTrack(track);
             var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _tidalAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _tidalAlbum));
             var outDir = Path.GetDirectoryName(outPath)!;
 
@@ -131,10 +143,10 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
             if (!Directory.Exists(outDir))
                 Directory.CreateDirectory(outDir);
 
-            await TidalAPI.Instance.Client.Downloader.WriteRawTrackToFile(track, outPath, Bitrate, null, cancellation);
+            await TidalAPI.Instance.Client.Downloader.WriteRawTrackToFile(track, outPath, cancellation);
 
             var plainLyrics = string.Empty;
-            /*List<SyncLyrics> syncLyrics = null;
+            string syncLyrics = null;
 
             var lyrics = await TidalAPI.Instance.Client.Downloader.FetchLyricsFromTidal(track, cancellation);
             if (lyrics.HasValue)
@@ -155,12 +167,12 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                     if (settings.SaveSyncedLyrics && !(syncLyrics?.Any() ?? false))
                         syncLyrics = lyrics.Value.syncLyrics;
                 }
-            }*/
+            }
 
-            await TidalAPI.Instance.Client.Downloader.ApplyMetadataToFile(track, outPath, 512, plainLyrics, token: cancellation);
+            await TidalAPI.Instance.Client.Downloader.ApplyMetadataToFile(track, outPath, MediaResolution.s640, plainLyrics, token: cancellation);
 
-            //if (syncLyrics != null)
-            //    await CreateLrcFile(Path.Combine(outDir, MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", "lrc", page, _tidalAlbum)), syncLyrics);
+            if (syncLyrics != null)
+                await CreateLrcFile(Path.Combine(outDir, MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", "lrc", page, _tidalAlbum)), syncLyrics);
 
             // TODO: this is currently a waste of resources, if this pr ever gets merged, it can be reenabled
             // https://github.com/Lidarr/Lidarr/pull/4370
@@ -176,57 +188,26 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
             catch (UnavailableArtException) { } */
         }
 
-        public void EnsureValidity()
-        {
-            // TODO: reimpl
-            /*if ((DateTime.Now - _lastARLValidityCheck).TotalMinutes > 30)
-            {
-                _lastARLValidityCheck = DateTime.Now;
-                var arlValid = ARLUtilities.IsValid(TidalAPI.Instance.Client.ActiveARL);
-                if (!arlValid)
-                    throw new InvalidARLException("The applied ARL is not valid for downloading, cannot continue.");
-            }*/
-        }
-
         private async Task SetTidalData(CancellationToken cancellation = default)
         {
-            // TODO: reimpl
-            await Task.Delay(100);
-            /*if (_tidalUrl.EntityType != EntityType.Album)
+            if (_tidalUrl.EntityType != EntityType.Album)
                 throw new InvalidOperationException();
 
-            var albumPage = await TidalAPI.Instance.Client.GWApi.GetAlbumPage(_tidalUrl.Id, cancellation);
+            var album = await TidalAPI.Instance.Client.API.GetAlbum(_tidalUrl.Id, cancellation);
+            var albumTracks = await TidalAPI.Instance.Client.API.GetAlbumTracks(_tidalUrl.Id, cancellation);
 
-            var filesizeKey = Bitrate switch
-            {
-                Bitrate.MP3_128 => "FILESIZE_MP3_128",
-                Bitrate.MP3_320 => "FILESIZE_MP3_320",
-                Bitrate.FLAC => "FILESIZE_FLAC",
-                _ => "FILESIZE"
-            };
+            _tracks ??= album["items"]!.Select(t => (t["id"]!.ToString(), 0L)).ToArray();
+            _tidalAlbum = album;
 
-            _tracks ??= albumPage["SONGS"]!["data"]!.Select(t => (t["SNG_ID"]!.Value<long>(), t[filesizeKey]!.Value<long>())).ToArray();
-            _tidalAlbum = albumPage;
-
-            var album = albumPage["DATA"]!.ToObject<TidalGwAlbum>();
-
-            Title = album.AlbumTitle;
-            Artist = album.ArtistName;
-            Explicit = album.Explicit;
-            TotalSize = _tracks.Sum(t => t.size);*/
+            Title = album["title"]!.ToString();
+            Artist = album["artist"]!["name"]!.ToString();
+            Explicit = album["explicit"]!.Value<bool>();
+            TotalSize = _tracks.Sum(t => t.size);
         }
 
-
-        // TODO: no clue how Tidal does lyrics
-        /*private static async Task CreateLrcFile(string lrcFilePath, List<SyncLyrics> syncLyrics)
+        private static async Task CreateLrcFile(string lrcFilePath, string syncLyrics)
         {
-            StringBuilder lrcContent = new();
-            foreach (var lyric in syncLyrics)
-            {
-                if (!string.IsNullOrEmpty(lyric.LrcTimestamp) && !string.IsNullOrEmpty(lyric.Line))
-                    lrcContent.AppendLine(CultureInfo.InvariantCulture, $"{lyric.LrcTimestamp} {lyric.Line}");
-            }
-            await File.WriteAllTextAsync(lrcFilePath, lrcContent.ToString());
-        }*/
+            await File.WriteAllTextAsync(lrcFilePath, syncLyrics);
+        }
     }
 }
