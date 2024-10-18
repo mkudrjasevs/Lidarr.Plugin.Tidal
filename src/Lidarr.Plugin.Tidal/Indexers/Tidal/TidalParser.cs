@@ -98,7 +98,6 @@ namespace NzbDrone.Core.Indexers.Tidal
             string format;
             switch (bitrate)
             {
-                // TODO: no clue if this is right (or if it even matters)
                 case AudioQuality.LOW:
                     result.Codec = "AAC";
                     result.Container = "96";

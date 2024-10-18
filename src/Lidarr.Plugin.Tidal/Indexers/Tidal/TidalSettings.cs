@@ -2,7 +2,6 @@ using FluentValidation;
 using NzbDrone.Core.Annotations;
 using NzbDrone.Core.Validation;
 using NzbDrone.Core.Validation.Paths;
-using TidalSharp.Data;
 
 namespace NzbDrone.Core.Indexers.Tidal
 {
@@ -21,7 +20,7 @@ namespace NzbDrone.Core.Indexers.Tidal
         [FieldDefinition(0, Label = "RedirectUrl", Type = FieldType.Textbox)]
         public string RedirectUrl { get; set; } = "";
 
-        [FieldDefinition(1, Label = "Config Path", Type = FieldType.Textbox, HelpLink = "This is the directory where you account's information is stored so that it can be reloaded later.")]
+        [FieldDefinition(1, Label = "Config Path", Type = FieldType.Textbox, HelpText = "This is the directory where you account's information is stored so that it can be reloaded later.")]
         public string ConfigPath { get; set; } = "";
 
         [FieldDefinition(2, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
