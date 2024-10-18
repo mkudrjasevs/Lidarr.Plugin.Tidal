@@ -12,18 +12,18 @@ namespace NzbDrone.Plugin.Tidal
     {
         public static TidalAPI Instance { get; private set; }
 
-        public static void Initialize(AudioQuality quality, string configDir, Logger logger)
+        public static void Initialize(string configDir, Logger logger)
         {
             if (Instance != null)
                 return;
-            Instance = new TidalAPI(quality, configDir);
+            Instance = new TidalAPI(configDir);
             logger.Info("Tidal URL; use this to login: " + Instance.Client.GetPkceLoginUrl());
         }
 
-        private TidalAPI(AudioQuality quality, string configDir)
+        private TidalAPI(string configDir)
         {
             Instance = this;
-            _client = new(quality, VideoQuality.HIGH, configDir);
+            _client = new(configDir);
         }
 
         public TidalClient Client => _client;

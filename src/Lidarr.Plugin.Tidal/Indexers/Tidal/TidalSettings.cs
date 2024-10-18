@@ -20,13 +20,11 @@ namespace NzbDrone.Core.Indexers.Tidal
 
         [FieldDefinition(0, Label = "RedirectUrl", Type = FieldType.Textbox)]
         public string RedirectUrl { get; set; } = "";
+
         [FieldDefinition(1, Label = "Config Path", Type = FieldType.Textbox, HelpLink = "This is the directory where you account's information is stored so that it can be reloaded later.")]
         public string ConfigPath { get; set; } = "";
 
-        [FieldDefinition(2, Label = "Audio Download Quality", Type = FieldType.Number)] // TODO: i have no idea how to display an enum list
-        public AudioQuality AudioQuality { get; set; } = AudioQuality.HI_RES;           // TODO: it should be possible to make it instead list all available qualities? this was just how tidal-dl-ng does it but i don't think it matters
-
-        [FieldDefinition(3, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
+        [FieldDefinition(2, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
         public int? EarlyReleaseLimit { get; set; }
 
         // this is hardcoded so this doesn't need to exist except that it's required by the interface

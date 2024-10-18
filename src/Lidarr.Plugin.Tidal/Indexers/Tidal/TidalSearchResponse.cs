@@ -92,6 +92,15 @@ public partial class TidalSearchResponse
 
         [JsonProperty("artists")]
         public Artist[] Artists { get; set; }
+
+        [JsonProperty("mediaMetadata")]
+        public MediaMetadataData MediaMetadata { get; set; }
+
+        public class MediaMetadataData
+        {
+            [JsonProperty("tags")]
+            public string[] Tags { get; set; }
+        }
     }
 
     public class Artists

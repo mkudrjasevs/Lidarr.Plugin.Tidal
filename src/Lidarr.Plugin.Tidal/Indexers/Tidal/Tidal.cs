@@ -35,7 +35,7 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             if (!string.IsNullOrEmpty(Settings.ConfigPath))
             {
-                TidalAPI.Initialize(Settings.AudioQuality, Settings.ConfigPath, _logger);
+                TidalAPI.Initialize(Settings.ConfigPath, _logger);
                 bool success = TidalAPI.Instance.Client.Login(Settings.RedirectUrl).Result;
                 if (!success)
                 {

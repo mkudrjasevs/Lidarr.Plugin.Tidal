@@ -24,7 +24,7 @@ namespace NzbDrone.Core.Indexers.Tidal
 
             foreach (var task in releases)
             {
-                torrentInfos.Add(task);
+                torrentInfos.AddRange(task);
             }
 
             foreach (var track in jsonResponse.TrackResults.Items)
@@ -34,7 +34,7 @@ namespace NzbDrone.Core.Indexers.Tidal
                 {
                     var processTrackTask = ProcessTrackAlbumResultAsync(track);
                     processTrackTask.Wait();
-                    torrentInfos.Add(processTrackTask.Result);
+                    torrentInfos.AddRange(processTrackTask.Result);
                 }
             }
 
@@ -43,20 +43,36 @@ namespace NzbDrone.Core.Indexers.Tidal
                 .ToArray();
         }
 
-        private ReleaseInfo ProcessAlbumResult(TidalSearchResponse.Album result)
+        private IEnumerable<ReleaseInfo> ProcessAlbumResult(TidalSearchResponse.Album result)
         {
+            // determine available audio qualities
+            List<AudioQuality> qualityList = new() { AudioQuality.LOW, AudioQuality.HIGH };
+
+            if (result.MediaMetadata.Tags.Contains("HIRES_LOSSLESS"))
+            {
+                qualityList.Add(AudioQuality.LOSSLESS);
+                qualityList.Add(AudioQuality.HI_RES);
+                qualityList.Add(AudioQuality.HI_RES_LOSSLESS);
+            }
+            else if (result.MediaMetadata.Tags.Contains("MQA"))
+            {
+                qualityList.Add(AudioQuality.LOSSLESS);
+                qualityList.Add(AudioQuality.HI_RES);
+            }
+            else if (result.MediaMetadata.Tags.Contains("LOSSLESS"))
+                qualityList.Add(AudioQuality.LOSSLESS);
+
             var quality = Enum.Parse<AudioQuality>(result.AudioQuality);
-            return ToReleaseInfo(result, quality, 0);
+            return qualityList.Select(q => ToReleaseInfo(result, q));
         }
 
-        private async Task<ReleaseInfo> ProcessTrackAlbumResultAsync(TidalSearchResponse.Track result)
+        private async Task<IEnumerable<ReleaseInfo>> ProcessTrackAlbumResultAsync(TidalSearchResponse.Track result)
         {
             var album = (await TidalAPI.Instance.Client.API.GetAlbum(result.Album.Id)).ToObject<TidalSearchResponse.Album>(); // track albums hold much less data so we get the full one
-            var quality = Enum.Parse<AudioQuality>(album.AudioQuality);
-            return ToReleaseInfo(album, quality, 0);
+            return ProcessAlbumResult(album);
         }
 
-        private static ReleaseInfo ToReleaseInfo(TidalSearchResponse.Album x, AudioQuality bitrate, long size)
+        private static ReleaseInfo ToReleaseInfo(TidalSearchResponse.Album x, AudioQuality bitrate)
         {
             var publishDate = DateTime.UtcNow;
             var year = 0;
@@ -111,6 +127,18 @@ namespace NzbDrone.Core.Indexers.Tidal
                 default:
                     throw new NotImplementedException();
             }
+
+            // estimated sizing as tidal doesn't provide exact sizes in its api
+            var bps = bitrate switch
+            {
+                AudioQuality.HI_RES_LOSSLESS => 1152000,
+                AudioQuality.HI_RES => 576000,
+                AudioQuality.LOSSLESS => 176400,
+                AudioQuality.HIGH => 40000,
+                AudioQuality.LOW => 12000,
+                _ => 40000
+            };
+            var size = x.Duration * bps;
 
             result.Size = size;
             result.Title = $"{x.Artists.First().Name} - {x.Title}";
