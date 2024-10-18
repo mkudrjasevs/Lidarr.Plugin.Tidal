@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -48,6 +49,11 @@ namespace NzbDrone.Core.Indexers.Tidal
 
         private IEnumerable<IndexerRequest> GetRequests(string searchParameters, int limit = 1000)
         {
+            if (DateTime.Now > TidalAPI.Instance.Client.ActiveUser.ExpirationDate)
+            {
+                TidalAPI.Instance.Client.IsLoggedIn().Wait(); // calls an internal function which handles refreshes if needed
+            }
+
             var data = new Dictionary<string, string>()
             {
                 ["query"] = searchParameters,
