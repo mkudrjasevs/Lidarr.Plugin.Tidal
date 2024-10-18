@@ -17,7 +17,7 @@ namespace NzbDrone.Core.Indexers.Tidal
     {
         private static readonly TidalIndexerSettingsValidator Validator = new TidalIndexerSettingsValidator();
 
-        [FieldDefinition(0, Label = "RedirectUrl", Type = FieldType.Textbox)]
+        [FieldDefinition(0, Label = "Redirect Url", Type = FieldType.Textbox)]
         public string RedirectUrl { get; set; } = "";
 
         [FieldDefinition(1, Label = "Config Path", Type = FieldType.Textbox, HelpText = "This is the directory where you account's information is stored so that it can be reloaded later.")]
