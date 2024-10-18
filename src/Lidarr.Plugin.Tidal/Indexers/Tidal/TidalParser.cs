@@ -19,7 +19,6 @@ namespace NzbDrone.Core.Indexers.Tidal
             var torrentInfos = new List<ReleaseInfo>();
             var content = new HttpResponse<TidalSearchResponse>(response.HttpResponse).Content;
 
-            Console.WriteLine(content);
             var jsonResponse = JObject.Parse(content).ToObject<TidalSearchResponse>();
             var releases = jsonResponse.AlbumResults.Items.Select(result => ProcessAlbumResult(result)).ToArray();
 

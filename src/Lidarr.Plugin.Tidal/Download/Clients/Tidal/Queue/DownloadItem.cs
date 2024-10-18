@@ -31,16 +31,16 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                     quality = AudioQuality.LOW;
                     break;
                 case "320":
-                    quality = AudioQuality.LOW;
+                    quality = AudioQuality.HIGH;
                     break;
                 case "Lossless":
-                    quality = AudioQuality.LOW;
+                    quality = AudioQuality.LOSSLESS;
                     break;
                 case "Hi-Res":
-                    quality = AudioQuality.LOW;
+                    quality = AudioQuality.HI_RES;
                     break;
                 case "Hi-Res Lossless":
-                    quality = AudioQuality.LOW;
+                    quality = AudioQuality.HI_RES_LOSSLESS;
                     break;
                 default:
                     quality = AudioQuality.HIGH;
@@ -48,9 +48,9 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
             }
 
             DownloadItem item = null;
-            if (url.Contains("Tidal", StringComparison.CurrentCultureIgnoreCase))
+            if (url.Contains("tidal", StringComparison.CurrentCultureIgnoreCase))
             {
-                if (TidalURL.TryParse(url, out var TidalUrl))
+                if (TidalURL.TryParse(url, out var tidalUrl))
                 {
                     item = new()
                     {
@@ -58,7 +58,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                         Status = DownloadItemStatus.Queued,
                         Bitrate = quality,
                         RemoteAlbum = remoteAlbum,
-                        _tidalUrl = TidalUrl,
+                        _tidalUrl = tidalUrl,
                     };
 
                     await item.SetTidalData();
@@ -87,9 +87,9 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
 
         public int FailedTracks { get; private set; }
 
-        private (string id, long size)[] _tracks = Array.Empty<(string id, long size)>();
+        private (string id, long size)[] _tracks;
         private TidalURL _tidalUrl;
-        private JObject _tidalAlbum = null;
+        private JObject _tidalAlbum;
         private DateTime _lastARLValidityCheck = DateTime.MinValue;
 
         public async Task DoDownload(TidalSettings settings, Logger logger, CancellationToken cancellation = default)
@@ -133,9 +133,9 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
             var songTitle = page["title"]!.ToString();
             var artistName = page["artist"]!["name"]!.ToString();
             var albumTitle = page["album"]!["title"]!.ToString();
-            var duration = page["DATA"]!["DURATION"]!.Value<int>();
+            var duration = page["duration"]!.Value<int>();
 
-            var ext = await TidalAPI.Instance.Client.Downloader.GetExtensionForTrack(track);
+            var ext = (await TidalAPI.Instance.Client.Downloader.GetExtensionForTrack(track)).TrimStart('.');
             var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _tidalAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _tidalAlbum));
             var outDir = Path.GetDirectoryName(outPath)!;
 
@@ -196,7 +196,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
             var album = await TidalAPI.Instance.Client.API.GetAlbum(_tidalUrl.Id, cancellation);
             var albumTracks = await TidalAPI.Instance.Client.API.GetAlbumTracks(_tidalUrl.Id, cancellation);
 
-            _tracks ??= album["items"]!.Select(t => (t["id"]!.ToString(), 0L)).ToArray();
+            _tracks ??= albumTracks["items"]!.Select(t => (t["id"]!.ToString(), 0L)).ToArray();
             _tidalAlbum = album;
 
             Title = album["title"]!.ToString();
