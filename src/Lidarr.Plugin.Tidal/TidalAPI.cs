@@ -4,7 +4,6 @@ using System.Net;
 using System.Text;
 using NLog;
 using TidalSharp;
-using TidalSharp.Data;
 
 namespace NzbDrone.Plugin.Tidal
 {

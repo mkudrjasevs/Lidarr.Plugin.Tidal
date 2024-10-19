@@ -21,7 +21,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal
         [FieldDefinition(0, Label = "Download Path", Type = FieldType.Textbox)]
         public string DownloadPath { get; set; } = "";
 
-        [FieldDefinition(1, Label = "Extract raw audio file from M4A", HelpText = "This will usually result in *.aac and *.flac files instead of *.m4a.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
+        [FieldDefinition(1, Label = "Extract Raw Audio File From M4A", HelpText = "This will usually result in *.aac and *.flac files instead of *.m4a.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
         public bool ExtractRawAudio { get; set; } = false;
 
         [FieldDefinition(2, Label = "Re-encode AAC into MP3", HelpText = "If used alongside Extract Raw Audio, it will result in just the *.mp3.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
