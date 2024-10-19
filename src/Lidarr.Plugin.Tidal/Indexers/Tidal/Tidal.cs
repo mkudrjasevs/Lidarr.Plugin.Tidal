@@ -36,10 +36,24 @@ namespace NzbDrone.Core.Indexers.Tidal
             if (!string.IsNullOrEmpty(Settings.ConfigPath))
             {
                 TidalAPI.Initialize(Settings.ConfigPath, _logger);
-                bool success = TidalAPI.Instance.Client.Login(Settings.RedirectUrl).Result;
-                if (!success)
+                try
                 {
-                    return null;
+                    var loginTask = TidalAPI.Instance.Client.Login(Settings.RedirectUrl);
+                    loginTask.Wait();
+
+                    // the url was submitted to the api so it likely cannot be reused; relogging the url in case it's needed
+                    TidalAPI.Instance.Client.RegeneratePkceCodes();
+                    _logger.Info("Tidal URL; use this to login: " + TidalAPI.Instance.Client.GetPkceLoginUrl());
+
+                    var success = loginTask.Result;
+                    if (!success)
+                    {
+                        return null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"Tidal login failed:\n{ex}");
                 }
             }
             else
