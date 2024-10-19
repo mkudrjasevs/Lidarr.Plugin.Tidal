@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json.Linq;
 using NLog;
 using NzbDrone.Common.Http;
 using NzbDrone.Core.IndexerSearch.Definitions;
@@ -11,6 +9,8 @@ namespace NzbDrone.Core.Indexers.Tidal
 {
     public class TidalRequestGenerator : IIndexerRequestGenerator
     {
+        private const int PageSize = 100;
+        private const int MaxPages = 30;
         public TidalIndexerSettings Settings { get; set; }
         public Logger Logger { get; set; }
 
@@ -18,13 +18,7 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             // this is a lazy implementation, just here so that lidarr has something to test against when saving settings 
             var pageableRequests = new IndexerPageableRequestChain();
-
-            var req = GetRequests("never gonna give you up", 10).First();
-
-            pageableRequests.Add(new[]
-            {
-                req
-            });
+            pageableRequests.Add(GetRequests("never gonna give you up"));
 
             return pageableRequests;
         }
@@ -47,26 +41,29 @@ namespace NzbDrone.Core.Indexers.Tidal
             return chain;
         }
 
-        private IEnumerable<IndexerRequest> GetRequests(string searchParameters, int limit = 1000)
+        private IEnumerable<IndexerRequest> GetRequests(string searchParameters)
         {
             if (DateTime.UtcNow > TidalAPI.Instance.Client.ActiveUser.ExpirationDate)
             {
                 TidalAPI.Instance.Client.IsLoggedIn().Wait(); // calls an internal function which handles refreshes if needed
             }
 
-            var data = new Dictionary<string, string>()
+            for (var page = 0; page < MaxPages; page++)
             {
-                ["query"] = searchParameters,
-                ["limit"] = limit.ToString(),
-                ["types"] = "albums,tracks",
-                ["offset"] = "0",
-            };
+                var data = new Dictionary<string, string>()
+                {
+                    ["query"] = searchParameters,
+                    ["limit"] = $"{PageSize}",
+                    ["types"] = "albums,tracks",
+                    ["offset"] = $"{page * PageSize}",
+                };
 
-            var url = TidalAPI.Instance!.GetAPIUrl("search", data);
-            var req = new IndexerRequest(url, HttpAccept.Json);
-            req.HttpRequest.Method = System.Net.Http.HttpMethod.Get;
-            req.HttpRequest.Headers.Add("Authorization", $"{TidalAPI.Instance.Client.ActiveUser.TokenType} {TidalAPI.Instance.Client.ActiveUser.AccessToken}");
-            yield return req;
+                var url = TidalAPI.Instance!.GetAPIUrl("search", data);
+                var req = new IndexerRequest(url, HttpAccept.Json);
+                req.HttpRequest.Method = System.Net.Http.HttpMethod.Get;
+                req.HttpRequest.Headers.Add("Authorization", $"{TidalAPI.Instance.Client.ActiveUser.TokenType} {TidalAPI.Instance.Client.ActiveUser.AccessToken}");
+                yield return req;
+            }
         }
     }
 }
