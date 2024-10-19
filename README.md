@@ -24,10 +24,10 @@ This requires your Lidarr setup to be using the `plugins` branch. My docker-comp
 2. Go into the Indexer settings and press Add. In the modal, choose `Tidal` (under Other at the bottom).
 3. Enter a path to use to store user data, press Test, it will error, press Cancel.
 4. Open the Lidarr log under `System -> Log Files` and download `lidarr.txt`.
-5. In the file, search for `Tidal URL; use this to login:` and open the listed URL in a new tab.
+5. In the file, search for **the last instance of** `Tidal URL; use this to login:` and open the listed URL in a new tab.
 6. In the new tab, log in to Tidal, then press `Yes, continue`. It will then bring you to a page labeled "Oops." Copy the new URL for that tab (something like `https://tidal.com/android/login/auth?code=[VERY LONG CODE]`).
    - Do NOT share this URL with people as it grants people access to your account.
-   - Once you press, `Yes, continue`, the URL from the Lidarr log can not be used again. If you need to sign in again, make sure to use the newest URL from the plugin.
+   - Redirect URLs are NOT reusable. If you need to sign in again, make sure to use the newest URL from the Lidarr log.
 7. Go back to the Indexer settings and pick `Tidal` again.
 8. Enter a path to use to store user data and paste the copied Tidal URL into the `Redirect Url` option. Then press Save.
 9.  Go into the Download Client settings and press Add. In the modal, choose `Tidal` (under Other at the bottom).
