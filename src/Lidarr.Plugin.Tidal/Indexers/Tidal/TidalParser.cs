@@ -101,27 +101,27 @@ namespace NzbDrone.Core.Indexers.Tidal
                 case AudioQuality.LOW:
                     result.Codec = "AAC";
                     result.Container = "96";
-                    format = "M4A (AAC) 96kbps";
+                    format = "AAC (M4A) 96kbps";
                     break;
                 case AudioQuality.HIGH:
                     result.Codec = "AAC";
                     result.Container = "320";
-                    format = "M4A (AAC) 320kbps";
+                    format = "AAC (M4A) 320kbps";
                     break;
                 case AudioQuality.LOSSLESS:
                     result.Codec = "FLAC";
                     result.Container = "Lossless";
-                    format = "M4A (FLAC) Lossless";
+                    format = "FLAC (M4A) Lossless";
                     break;
                 case AudioQuality.HI_RES:
                     result.Codec = "FLAC";
                     result.Container = "Hi-Res";
-                    format = "M4A (FLAC) Hi-Res";
+                    format = "FLAC (M4A) Hi-Res";
                     break;
                 case AudioQuality.HI_RES_LOSSLESS:
                     result.Codec = "FLAC";
                     result.Container = "Hi-Res Lossless";
-                    format = "M4A (FLAC) Hi-Res Lossless";
+                    format = "FLAC (M4A) Hi-Res Lossless";
                     break;
                 default:
                     throw new NotImplementedException();
