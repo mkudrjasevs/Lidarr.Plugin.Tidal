@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using NLog;
 using NzbDrone.Core.Parser.Model;
+using NzbDrone.Core.Plugins;
 using NzbDrone.Plugin.Tidal;
 using TidalSharp;
 using TidalSharp.Data;
@@ -124,6 +125,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                 Directory.CreateDirectory(outDir);
 
             await TidalAPI.Instance.Client.Downloader.WriteRawTrackToFile(track, Bitrate, outPath, (i) => DownloadedSize++, cancellation);
+            outPath = HandleAudioConversion(outPath, settings);
 
             var plainLyrics = string.Empty;
             string syncLyrics = null;
@@ -166,6 +168,55 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                 }
             }
             catch (UnavailableArtException) { } */
+        }
+
+        private string HandleAudioConversion(string filePath, TidalSettings settings)
+        {
+            if (!settings.ExtractFlac && !settings.ReEncodeAAC)
+                return filePath;
+
+            var codecs = FFMPEG.ProbeCodecs(filePath);
+            if (codecs.Contains("flac") && settings.ExtractFlac)
+            {
+                var newFilePath = Path.ChangeExtension(filePath, "flac");
+                try
+                {
+                    FFMPEG.ConvertWithoutReencode(filePath, newFilePath);
+                    if (File.Exists(filePath))
+                        File.Delete(filePath);
+                    return newFilePath;
+                }
+                catch (FFMPEGException)
+                {
+                    if (File.Exists(newFilePath))
+                        File.Delete(newFilePath);
+                    return filePath;
+                }
+            }
+
+            if (codecs.Contains("aac") && settings.ReEncodeAAC)
+            {
+                var newFilePath = Path.ChangeExtension(filePath, "mp3");
+                try
+                {
+                    var tagFile = TagLib.File.Create(filePath);
+                    var bitrate = tagFile.Properties.AudioBitrate;
+                    tagFile.Dispose();
+
+                    FFMPEG.Reencode(filePath, newFilePath, bitrate);
+                    if (File.Exists(filePath))
+                        File.Delete(filePath);
+                    return newFilePath;
+                }
+                catch (FFMPEGException)
+                {
+                    if (File.Exists(newFilePath))
+                        File.Delete(newFilePath);
+                    return filePath;
+                }
+            }
+
+            return filePath;
         }
 
         private async Task SetTidalData(CancellationToken cancellation = default)

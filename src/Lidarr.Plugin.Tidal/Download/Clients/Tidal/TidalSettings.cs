@@ -21,11 +21,11 @@ namespace NzbDrone.Core.Download.Clients.Tidal
         [FieldDefinition(0, Label = "Download Path", Type = FieldType.Textbox)]
         public string DownloadPath { get; set; } = "";
 
-        [FieldDefinition(1, Label = "Extract Raw Audio File From M4A", HelpText = "This will usually result in *.aac and *.flac files instead of *.m4a.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
-        public bool ExtractRawAudio { get; set; } = false;
+        [FieldDefinition(1, Label = "Extract FLAC From M4A", HelpText = "Extracts FLAC data from the Tidal-provided M4A files.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
+        public bool ExtractFlac { get; set; } = false;
 
-        [FieldDefinition(2, Label = "Re-encode AAC into MP3", HelpText = "If used alongside Extract Raw Audio, it will result in just the *.mp3.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
-        public bool ReEncodeAACToMP3 { get; set; } = false;
+        [FieldDefinition(2, Label = "Re-encode AAC into MP3", HelpText = "Re-encodes AAC data from the Tidal-provided M4A files into MP3s.", HelpTextWarning = "This requires FFMPEG and FFProbe to be available to Lidarr.", Type = FieldType.Checkbox)]
+        public bool ReEncodeAAC { get; set; } = false;
 
         [FieldDefinition(3, Label = "Save Synced Lyrics", HelpText = "Saves synced lyrics to a separate .lrc file if available. Requires .lrc to be allowed under Import Extra Files.", Type = FieldType.Checkbox)]
         public bool SaveSyncedLyrics { get; set; } = false;
