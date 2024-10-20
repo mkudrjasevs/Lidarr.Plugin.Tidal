@@ -41,9 +41,8 @@ namespace NzbDrone.Core.Indexers.Tidal
                     var loginTask = TidalAPI.Instance.Client.Login(Settings.RedirectUrl);
                     loginTask.Wait();
 
-                    // the url was submitted to the api so it likely cannot be reused; relogging the url in case it's needed
+                    // the url was submitted to the api so it likely cannot be reused
                     TidalAPI.Instance.Client.RegeneratePkceCodes();
-                    _logger.Info("Tidal URL; use this to login: " + TidalAPI.Instance.Client.GetPkceLoginUrl());
 
                     var success = loginTask.Result;
                     if (!success)

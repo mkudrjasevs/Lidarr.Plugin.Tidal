@@ -16,7 +16,6 @@ namespace NzbDrone.Plugin.Tidal
             if (Instance != null)
                 return;
             Instance = new TidalAPI(configDir);
-            logger.Info("Tidal URL; use this to login: " + Instance.Client.GetPkceLoginUrl());
         }
 
         private TidalAPI(string configDir)

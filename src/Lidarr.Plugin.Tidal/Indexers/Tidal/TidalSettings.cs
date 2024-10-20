@@ -2,6 +2,7 @@ using FluentValidation;
 using NzbDrone.Core.Annotations;
 using NzbDrone.Core.Validation;
 using NzbDrone.Core.Validation.Paths;
+using NzbDrone.Plugin.Tidal;
 
 namespace NzbDrone.Core.Indexers.Tidal
 {
@@ -16,6 +17,9 @@ namespace NzbDrone.Core.Indexers.Tidal
     public class TidalIndexerSettings : IIndexerSettings
     {
         private static readonly TidalIndexerSettingsValidator Validator = new TidalIndexerSettingsValidator();
+
+        [FieldDefinition(0, Label = "Tidal URL", HelpText = "Use this to sign into Tidal.")]
+        public string TidalUrl { get => TidalAPI.Instance?.Client?.GetPkceLoginUrl() ?? ""; set { } }
 
         [FieldDefinition(0, Label = "Redirect Url", Type = FieldType.Textbox)]
         public string RedirectUrl { get; set; } = "";
