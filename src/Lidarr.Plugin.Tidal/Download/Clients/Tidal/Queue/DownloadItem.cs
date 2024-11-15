@@ -24,7 +24,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                 "96" => AudioQuality.LOW,
                 "320" => AudioQuality.HIGH,
                 "Lossless" => AudioQuality.LOSSLESS,
-                "Hi-Res Lossless" => AudioQuality.HI_RES_LOSSLESS,
+                "24-bit Lossless" => AudioQuality.HI_RES_LOSSLESS,
                 _ => AudioQuality.HIGH,
             };
 
