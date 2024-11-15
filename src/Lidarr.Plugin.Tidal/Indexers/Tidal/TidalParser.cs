@@ -53,13 +53,7 @@ namespace NzbDrone.Core.Indexers.Tidal
             if (result.MediaMetadata.Tags.Contains("HIRES_LOSSLESS"))
             {
                 qualityList.Add(AudioQuality.LOSSLESS);
-                qualityList.Add(AudioQuality.HI_RES);
                 qualityList.Add(AudioQuality.HI_RES_LOSSLESS);
-            }
-            else if (result.MediaMetadata.Tags.Contains("MQA"))
-            {
-                qualityList.Add(AudioQuality.LOSSLESS);
-                qualityList.Add(AudioQuality.HI_RES);
             }
             else if (result.MediaMetadata.Tags.Contains("LOSSLESS"))
                 qualityList.Add(AudioQuality.LOSSLESS);
@@ -127,11 +121,6 @@ namespace NzbDrone.Core.Indexers.Tidal
                     result.Container = "Lossless";
                     format = "FLAC (M4A) Lossless";
                     break;
-                case AudioQuality.HI_RES:
-                    result.Codec = "FLAC";
-                    result.Container = "Hi-Res";
-                    format = "FLAC (M4A) Hi-Res";
-                    break;
                 case AudioQuality.HI_RES_LOSSLESS:
                     result.Codec = "FLAC";
                     result.Container = "Hi-Res Lossless";
@@ -145,7 +134,6 @@ namespace NzbDrone.Core.Indexers.Tidal
             var bps = bitrate switch
             {
                 AudioQuality.HI_RES_LOSSLESS => 1152000,
-                AudioQuality.HI_RES => 576000,
                 AudioQuality.LOSSLESS => 176400,
                 AudioQuality.HIGH => 40000,
                 AudioQuality.LOW => 12000,

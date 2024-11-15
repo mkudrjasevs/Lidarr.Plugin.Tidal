@@ -72,7 +72,6 @@ namespace NzbDrone.Core.Download.Clients.Tidal
                 AudioQuality.LOW => "AAC (M4A) 96kbps",
                 AudioQuality.HIGH => "AAC (M4A) 320kbps",
                 AudioQuality.LOSSLESS => "FLAC (M4A) Lossless",
-                AudioQuality.HI_RES => "FLAC (M4A) Hi-Res",
                 AudioQuality.HI_RES_LOSSLESS => "FLAC (M4A) Hi-Res Lossless",
                 _ => throw new NotImplementedException(),
             };
