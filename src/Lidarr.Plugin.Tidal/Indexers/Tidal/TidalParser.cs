@@ -7,6 +7,7 @@ using NzbDrone.Common.Http;
 using NzbDrone.Core.Parser.Model;
 using NzbDrone.Plugin.Tidal;
 using TidalSharp.Data;
+using TidalSharp.Exceptions;
 
 namespace NzbDrone.Core.Indexers.Tidal
 {
@@ -34,7 +35,8 @@ namespace NzbDrone.Core.Indexers.Tidal
                 {
                     var processTrackTask = ProcessTrackAlbumResultAsync(track);
                     processTrackTask.Wait();
-                    torrentInfos.AddRange(processTrackTask.Result);
+                    if (processTrackTask.Result != null)
+                        torrentInfos.AddRange(processTrackTask.Result);
                 }
             }
 
@@ -68,8 +70,15 @@ namespace NzbDrone.Core.Indexers.Tidal
 
         private async Task<IEnumerable<ReleaseInfo>> ProcessTrackAlbumResultAsync(TidalSearchResponse.Track result)
         {
-            var album = (await TidalAPI.Instance.Client.API.GetAlbum(result.Album.Id)).ToObject<TidalSearchResponse.Album>(); // track albums hold much less data so we get the full one
-            return ProcessAlbumResult(album);
+            try
+            {
+                var album = (await TidalAPI.Instance.Client.API.GetAlbum(result.Album.Id)).ToObject<TidalSearchResponse.Album>(); // track albums hold much less data so we get the full one
+                return ProcessAlbumResult(album);
+            }
+            catch (ResourceNotFoundException) // seems to occur in some cases, not sure why. i blame tidal
+            {
+                return null;
+            }
         }
 
         private static ReleaseInfo ToReleaseInfo(TidalSearchResponse.Album x, AudioQuality bitrate)
