@@ -44,7 +44,7 @@ internal class FFMPEG
 
         proc.Start();
         var output = proc.StandardOutput.ReadToEnd();
-        proc.WaitForExit();
+        proc.WaitForExit(60000);
 
         return (proc.ExitCode, output);
     }
