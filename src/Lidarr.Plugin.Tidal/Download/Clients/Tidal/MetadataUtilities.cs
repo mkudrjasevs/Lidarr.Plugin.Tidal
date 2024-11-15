@@ -11,7 +11,8 @@ namespace NzbDrone.Core.Download.Clients.Tidal
     {
         public static string GetFilledTemplate(string template, string ext, JObject tidalPage, JObject tidalAlbum)
         {
-            var releaseDate = DateTime.Parse(tidalAlbum["releaseDate"]!.ToString(), CultureInfo.InvariantCulture);
+            var rawReleaseDate = tidalAlbum["releaseDate"]?.ToString() ?? tidalAlbum["streamStartDate"]?.ToString();
+            var releaseDate = !string.IsNullOrEmpty(rawReleaseDate) ? DateTime.Parse(rawReleaseDate, CultureInfo.InvariantCulture) : DateTime.MinValue;
             return GetFilledTemplate_Internal(template,
                 tidalPage["title"]!.ToString(),
                 tidalPage["album"]!["title"]!.ToString(),

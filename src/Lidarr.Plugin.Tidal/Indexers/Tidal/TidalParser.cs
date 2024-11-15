@@ -90,6 +90,11 @@ namespace NzbDrone.Core.Indexers.Tidal
                 publishDate = digitalReleaseDate;
                 year = publishDate.Year;
             }
+            else if (DateTime.TryParse(x.StreamStartDate, out var startStreamDate))
+            {
+                publishDate = startStreamDate;
+                year = startStreamDate.Year;
+            }
 
             var url = x.Url;
 
