@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net6.0</TargetFrameworks>
-	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,13 +21,10 @@
     <ProjectReference Include="..\..\ext\Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj" />
     <ProjectReference Include="..\..\ext\TidalSharp\TidalSharp\TidalSharp.csproj" />
   </ItemGroup>
-	
-  <Target Name="ZipOutputPath" AfterTargets="Publish">
-    <ZipDirectory SourceDirectory="$(PublishDir)" DestinationFile="$(SolutionDir)\..\Lidarr.Plugin.Tidal.$(TargetFramework).zip" />
-  </Target>
-	
+
   <Target Name="PostBuild" AfterTargets="ILRepacker">
-    <Exec ContinueOnError="true" Command="COPY &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Lidarr\plugins\TrevTV\Lidarr.Plugin.Tidal&quot;" />
+    <Exec ContinueOnError="true"
+      Command="COPY &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Lidarr\plugins\TrevTV\Lidarr.Plugin.Tidal&quot;" />
   </Target>
 
 </Project>
