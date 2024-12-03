@@ -18,26 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\TidalSharp\TidalSharp\TidalSharp.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="FluentValidation">
-      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\old\Lidarr\FluentValidation.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Lidarr.Common">
-      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\old\Lidarr\Lidarr.Common.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Lidarr.Core">
-      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\old\Lidarr\Lidarr.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NLog">
-      <HintPath>..\..\..\Lidarr\_artifacts\win-x64\net6.0\old\Lidarr\NLog.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <ProjectReference Include="..\..\ext\Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj" />
+    <ProjectReference Include="..\..\ext\TidalSharp\TidalSharp\TidalSharp.csproj" />
   </ItemGroup>
 	
   <Target Name="ZipOutputPath" AfterTargets="Publish">
