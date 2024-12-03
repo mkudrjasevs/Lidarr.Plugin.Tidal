@@ -47,4 +47,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PLUGIN_NAME }}.${{ matrix.framework }}
-          path: ./_plugins/net6.0/${{ env.PLUGIN_NAME }}/Lidarr.Plugin.Tidal.*
+          path: ./_plugins/net6.0/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.*
