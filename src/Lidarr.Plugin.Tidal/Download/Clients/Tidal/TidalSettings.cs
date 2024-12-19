@@ -33,6 +33,15 @@ namespace NzbDrone.Core.Download.Clients.Tidal
         [FieldDefinition(4, Label = "Use LRCLIB as Backup Lyric Provider", HelpText = "If Tidal does not have plain or synced lyrics for a track, the plugin will attempt to get them from LRCLIB.", Type = FieldType.Checkbox)]
         public bool UseLRCLIB { get; set; } = false;
 
+        [FieldDefinition(5, Label = "Download Delay", HelpText = "When downloading many tracks, Tidal may rate-limit you. This will add a delay between track downloads to help prevent this.", Type = FieldType.Checkbox)]
+        public bool DownloadDelay { get; set; } = false;
+
+        [FieldDefinition(5, Label = "Download Delay Minimum", HelpText = "Minimum download delay, in seconds.", Type = FieldType.Number)]
+        public float DownloadDelayMin { get; set; } = 3.0f;
+
+        [FieldDefinition(5, Label = "Download Delay Maximum", HelpText = "Maximum download delay, in seconds.", Type = FieldType.Number)]
+        public float DownloadDelayMax { get; set; } = 5.0f;
+
         public NzbDroneValidationResult Validate()
         {
             return new NzbDroneValidationResult(Validator.Validate(this));

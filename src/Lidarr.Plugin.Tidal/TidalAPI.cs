@@ -11,11 +11,12 @@ namespace NzbDrone.Plugin.Tidal
     {
         public static TidalAPI Instance { get; private set; }
 
-        public static void Initialize(string configDir, Logger logger)
+        public static void Initialize(string configDir, int reqsPerSecond, Logger logger)
         {
             if (Instance != null)
                 return;
             Instance = new TidalAPI(configDir);
+            Instance.Client.SetRateLimit(reqsPerSecond);
         }
 
         private TidalAPI(string configDir)

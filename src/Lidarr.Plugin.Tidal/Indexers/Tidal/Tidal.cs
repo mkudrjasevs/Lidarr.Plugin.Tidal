@@ -35,7 +35,7 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             if (!string.IsNullOrEmpty(Settings.ConfigPath))
             {
-                TidalAPI.Initialize(Settings.ConfigPath, _logger);
+                TidalAPI.Initialize(Settings.ConfigPath, Settings.RequestsPerSecond, _logger);
                 try
                 {
                     var loginTask = TidalAPI.Instance.Client.Login(Settings.RedirectUrl);

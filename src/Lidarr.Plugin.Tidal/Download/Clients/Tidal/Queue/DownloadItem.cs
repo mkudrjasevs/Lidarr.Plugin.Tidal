@@ -71,7 +71,6 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
         private (string id, int chunks)[] _tracks;
         private TidalURL _tidalUrl;
         private JObject _tidalAlbum;
-        private DateTime _lastARLValidityCheck = DateTime.MinValue;
 
         public async Task DoDownload(TidalSettings settings, Logger logger, CancellationToken cancellation = default)
         {
@@ -85,6 +84,11 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
                     try
                     {
                         await DoTrackDownload(trackId, settings, cancellation);
+                        if (settings.DownloadDelay)
+                        {
+                            var delay = (float)Random.Shared.NextDouble() * (settings.DownloadDelayMax - settings.DownloadDelayMin) + settings.DownloadDelayMin;
+                            await Task.Delay((int)(delay * 1000));
+                        }
                     }
                     catch (TaskCanceledException) { }
                     catch (Exception ex)

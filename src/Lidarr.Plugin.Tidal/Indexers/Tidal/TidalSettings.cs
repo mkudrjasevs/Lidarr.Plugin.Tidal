@@ -27,7 +27,10 @@ namespace NzbDrone.Core.Indexers.Tidal
         [FieldDefinition(1, Label = "Config Path", Type = FieldType.Textbox, HelpText = "This is the directory where you account's information is stored so that it can be reloaded later.")]
         public string ConfigPath { get; set; } = "";
 
-        [FieldDefinition(2, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
+        [FieldDefinition(2, Type = FieldType.Number, Label = "API Requests Per Second", HelpText = "Limits how many requests can be sent to Tidal every second, helps to prevent rate-limiting from Tidal.")]
+        public int RequestsPerSecond { get; set; } = 5;
+
+        [FieldDefinition(3, Type = FieldType.Number, Label = "Early Download Limit", Unit = "days", HelpText = "Time before release date Lidarr will download from this indexer, empty is no limit", Advanced = true)]
         public int? EarlyReleaseLimit { get; set; }
 
         // this is hardcoded so this doesn't need to exist except that it's required by the interface
@@ -35,6 +38,10 @@ namespace NzbDrone.Core.Indexers.Tidal
 
         public NzbDroneValidationResult Validate()
         {
+            // a very lazy way to update this when changed
+            // it's not very expensive as all this does is set a variable
+            TidalAPI.Instance?.Client?.SetRateLimit(RequestsPerSecond);
+
             return new NzbDroneValidationResult(Validator.Validate(this));
         }
     }
