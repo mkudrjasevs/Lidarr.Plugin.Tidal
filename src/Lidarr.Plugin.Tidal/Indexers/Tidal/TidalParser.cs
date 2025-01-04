@@ -123,8 +123,8 @@ namespace NzbDrone.Core.Indexers.Tidal
                     break;
                 case AudioQuality.HI_RES_LOSSLESS:
                     result.Codec = "FLAC";
-                    result.Container = "24-bit Lossless";
-                    format = "FLAC (M4A) 24-bit Lossless";
+                    result.Container = "24bit Lossless";
+                    format = "FLAC (M4A) 24bit Lossless";
                     break;
                 default:
                     throw new NotImplementedException();
