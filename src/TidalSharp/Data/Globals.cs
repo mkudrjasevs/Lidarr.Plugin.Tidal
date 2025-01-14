@@ -19,9 +19,14 @@ internal static class Globals
     public static string GetImageUrl(string hash, MediaResolution res)
         => string.Format(IMAGE_URL_TEMPLATE, hash.Replace('-', '/'), (int)res);
 
+    public static string GetImageResoursePath(string hash, MediaResolution res)
+        => string.Format(IMAGE_URL_RESOURCE_TEMPLATE, hash.Replace('-', '/'), (int)res);
+
     public static string GetVideoUrl(string hash, MediaResolution res)
         => string.Format(IMAGE_URL_TEMPLATE, hash.Replace('-', '/'), (int)res);
 
+    public const string IMAGE_URL_BASE = "https://resources.tidal.com/";
+    private const string IMAGE_URL_RESOURCE_TEMPLATE = "/images/{0}/{1}x{1}.jpg";
     private const string IMAGE_URL_TEMPLATE = "https://resources.tidal.com/images/{0}/{1}x{1}.jpg";
     private const string VIDEO_URL_TEMPLATE = "https://resources.tidal.com/videos/{0}/{1}x{1}.mp4";
 }

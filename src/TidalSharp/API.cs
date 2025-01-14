@@ -1,4 +1,5 @@
 using Newtonsoft.Json.Linq;
+using NzbDrone.Common.Http;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
@@ -9,13 +10,13 @@ namespace TidalSharp;
 
 public class API
 {
-    internal API(HttpClient client, Session session)
+    internal API(IHttpClient client, Session session)
     {
         _httpClient = client;
         _session = session;
     }
 
-    private HttpClient _httpClient;
+    private IHttpClient _httpClient;
     private Session _session;
     private TidalUser? _activeUser;
 
@@ -85,8 +86,6 @@ public class API
         CancellationToken token = default
     )
     {
-        await EnforceRateLimit();
-
         headers ??= [];
         urlParameters ??= [];
         urlParameters["sessionId"] = _activeUser?.SessionID ?? "";
@@ -111,24 +110,22 @@ public class API
 
         apiUrl = stringBuilder.ToString();
 
-        var content = formParameters == null ? null : new FormUrlEncodedContent(formParameters);
-
-        var request = new HttpRequestMessage()
+        var request = _httpClient.BuildRequest(apiUrl);
+        if (formParameters != null)
         {
-            Method = method,
-            RequestUri = new Uri(apiUrl),
-            Content = content
-        };
+            foreach (var param in formParameters)
+                request = request.AddFormParameter(param.Key, param.Value);
+        }
 
         foreach (var header in headers)
-            request.Headers.Add(header.Key, header.Value);
+            request = request.SetHeader(header.Key, header.Value);
 
-        var response = await _httpClient.SendAsync(request, token);
+        var response = await _httpClient.ProcessRequestAsync(request);
 
-        string resp = await response.Content.ReadAsStringAsync(token);
+        string resp = response.Content;
         JObject json = JObject.Parse(resp);
 
-        if (!response.IsSuccessStatusCode && !string.IsNullOrEmpty(_activeUser?.RefreshToken))
+        if (response.HasHttpError && !string.IsNullOrEmpty(_activeUser?.RefreshToken))
         {
             string? userMessage = json.GetValue("userMessage")?.ToString();
             if (userMessage != null && userMessage.Contains("The token has expired."))
@@ -152,7 +149,7 @@ public class API
             throw new ResourceNotFoundException(json.ToString());
         }
 
-        if (!response.IsSuccessStatusCode)
+        if (response.HasHttpError)
         {
             JToken? errors = json["errors"];
             if (errors != null && errors.Any())
@@ -166,36 +163,6 @@ public class API
         }
 
         return json;
-    }
-
-    private async Task EnforceRateLimit()
-    {
-        if (_rateLimitMaxRequestsPerSecond <= 0)
-            return;
-
-        if (!_requestTimestamps.TryPeek(out var timePeek))
-        {
-            _requestTimestamps.Enqueue(DateTime.UtcNow);
-            return;
-        }
-
-        // remove old time stamps
-        while (_requestTimestamps.Any() && timePeek < DateTime.UtcNow - _rateLimitTimeWindow)
-            _requestTimestamps.TryDequeue(out _);
-
-        // determine if we should be waiting or not
-        if (_requestTimestamps.Count >= _rateLimitMaxRequestsPerSecond)
-        {
-            if (!_requestTimestamps.TryPeek(out timePeek))
-                return;
-
-            var nextAvailableTime = timePeek.AddSeconds(1);
-            var delayTime = nextAvailableTime - DateTime.UtcNow;
-            if (delayTime > TimeSpan.Zero)
-                await Task.Delay(delayTime);
-        }
-
-        _requestTimestamps.Enqueue(DateTime.UtcNow);
     }
 
     private static string CombineUrl(params string[] urls)

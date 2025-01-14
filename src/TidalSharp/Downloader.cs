@@ -1,7 +1,6 @@
-﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Diagnostics;
+using NzbDrone.Common.Http;
+using Org.BouncyCastle.Tsp;
 using System.Globalization;
 using TidalSharp.Data;
 using TidalSharp.Downloading;
@@ -12,14 +11,14 @@ namespace TidalSharp;
 
 public class Downloader
 {
-    internal Downloader(HttpClient client, API api, Session session)
+    internal Downloader(IHttpClient client, API api, Session session)
     {
         _client = client;
         _api = api;
         _session = session;
     }
 
-    private readonly HttpClient _client;
+    private readonly IHttpClient _client;
     private readonly API _api;
     private readonly Session _session;
 
@@ -64,15 +63,17 @@ public class Downloader
 
     public async Task<byte[]> GetImageBytes(string id, MediaResolution resolution, CancellationToken token = default)
     {
-        HttpRequestMessage message = new(HttpMethod.Get, Globals.GetImageUrl(id, resolution));
-        HttpResponseMessage response = await _client.SendAsync(message, token);
+        var request = _client
+            .BuildRequest(Globals.IMAGE_URL_BASE)
+            .Resource(Globals.GetImageResoursePath(id, resolution));
+        var response = await _client.ProcessRequestAsync(request);
 
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             throw new UnavailableMediaException($"The image with {id} with resolution {resolution} is unavailable.");
         }
 
-        return await response.Content.ReadAsByteArrayAsync(token);
+        return response.ResponseData;
     }
 
     public async Task ApplyMetadataToTrackStream(string trackId, DownloadData<Stream> trackData, MediaResolution coverResolution = MediaResolution.s640, string lyrics = "", CancellationToken token = default)
@@ -117,12 +118,15 @@ public class Downloader
 
     public async Task<(string? plainLyrics, string? syncLyrics)?> FetchLyricsFromLRCLIB(string instance, string trackName, string artistName, string albumName, int duration, CancellationToken token = default)
     {
-        var requestUrl = $"https://{instance}/api/get?artist_name={Uri.EscapeDataString(artistName)}&track_name={Uri.EscapeDataString(trackName)}&album_name={Uri.EscapeDataString(albumName)}&duration={duration}";
-        var response = await _client.GetAsync(requestUrl, token);
+        var requestResource = $"/api/get?artist_name={Uri.EscapeDataString(artistName)}&track_name={Uri.EscapeDataString(trackName)}&album_name={Uri.EscapeDataString(albumName)}&duration={duration}";
+        var request = _client
+            .BuildRequest($"https://{instance}")
+            .Resource(requestResource);
+        var response = await _client.ProcessRequestAsync(request);
 
-        if (response.IsSuccessStatusCode)
+        if (!response.HasHttpError)
         {
-            var content = await response.Content.ReadAsStringAsync(token);
+            var content = response.Content;
             var json = JObject.Parse(content);
             return (json["plainLyrics"]?.ToString(), json["syncedLyrics"]?.ToString());
         }
@@ -171,11 +175,12 @@ public class Downloader
         for (int i = 0; i < urls.Length; i++)
         {
             var url = urls[i];
-            var message = new HttpRequestMessage(HttpMethod.Get, url);
-            var response = await _client.SendAsync(message, token);
-            var stream = await response.Content.ReadAsStreamAsync(token);
 
-            stream.CopyTo(outStream);
+            var request = _client
+                .BuildRequest(url);
+            var response = await _client.ProcessRequestAsync(request);
+
+            outStream.Write(response.ResponseData);
             onChunkDownloaded?.Invoke(i+1);
         }
 

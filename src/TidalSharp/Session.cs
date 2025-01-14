@@ -1,4 +1,5 @@
 using Newtonsoft.Json.Linq;
+using NzbDrone.Common.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -10,7 +11,7 @@ namespace TidalSharp;
 internal class Session
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value; RegenerateCodes sets them, no idea why it's complaining
-    internal Session(HttpClient client, int itemLimit = 1000, bool alac = true)
+    internal Session(IHttpClient client, int itemLimit = 1000, bool alac = true)
 #pragma warning restore CS8618
     {
         _httpClient = client;
@@ -24,7 +25,7 @@ internal class Session
     public int ItemLimit { get; init; }
     public bool Alac { get; init; }
 
-    private HttpClient _httpClient;
+    private IHttpClient _httpClient;
 
     private string _clientUniqueKey;
     private string _codeVerifier;
@@ -56,23 +57,20 @@ internal class Session
 
     public async Task<bool> AttemptTokenRefresh(TidalUser user, CancellationToken token = default)
     {
-        var data = new Dictionary<string, string>
-            {
-                { "grant_type", "refresh_token" },
-                { "refresh_token", user.RefreshToken },
-                { "client_id", user.IsPkce ? Globals.CLIENT_ID_PKCE : Globals.CLIENT_ID },
-                { "client_secret", user.IsPkce ? Globals.CLIENT_SECRET_PKCE : Globals.CLIENT_SECRET }
-            };
+        var request = _httpClient.BuildRequest(Globals.API_OAUTH2_TOKEN)
+                        .AddFormParameter("grant_type", "refresh_token")
+                        .AddFormParameter("refresh_token", user.RefreshToken)
+                        .AddFormParameter("client_id", user.IsPkce ? Globals.CLIENT_ID_PKCE : Globals.CLIENT_ID)
+                        .AddFormParameter("client_secret", user.IsPkce ? Globals.CLIENT_SECRET_PKCE : Globals.CLIENT_SECRET);
 
-        var content = new FormUrlEncodedContent(data);
-        var response = await _httpClient.PostAsync(Globals.API_OAUTH2_TOKEN, content, token);
+        var response = await _httpClient.ProcessRequestAsync(request);
 
-        if (!response.IsSuccessStatusCode)
+        if (response.HasHttpError)
             return false;
 
         try
         {
-            var responseStr = await response.Content.ReadAsStringAsync(token);
+            var responseStr = response.Content;
             var tokenData = JObject.Parse(responseStr).ToObject<OAuthTokenData>()!;
             await user.RefreshOAuthTokenData(tokenData, token);
             return true;
@@ -93,26 +91,23 @@ internal class Session
         if (string.IsNullOrEmpty(code))
             throw new InvalidURLException("Authorization code not found in the redirect URL.");
 
-        var data = new Dictionary<string, string>
-            {
-                { "code", code },
-                { "client_id", Globals.CLIENT_ID_PKCE },
-                { "grant_type", "authorization_code" },
-                { "redirect_uri", Globals.PKCE_URI_REDIRECT },
-                { "scope", "r_usr+w_usr+w_sub" },
-                { "code_verifier", _codeVerifier },
-                { "client_unique_key", _clientUniqueKey }
-            };
+        var request = _httpClient.BuildRequest(Globals.API_OAUTH2_TOKEN)
+                        .AddFormParameter("code", code)
+                        .AddFormParameter("client_id", Globals.CLIENT_ID_PKCE)
+                        .AddFormParameter("grant_type", "authorization_code")
+                        .AddFormParameter("redirect_uri", Globals.PKCE_URI_REDIRECT)
+                        .AddFormParameter("scope", "r_usr+w_usr+w_sub")
+                        .AddFormParameter("code_verifier", _codeVerifier)
+                        .AddFormParameter("client_unique_key", _clientUniqueKey);
 
-        var content = new FormUrlEncodedContent(data);
-        var response = await _httpClient.PostAsync(Globals.API_OAUTH2_TOKEN, content, token);
+        var response = await _httpClient.ProcessRequestAsync(request);
 
-        if (!response.IsSuccessStatusCode)
-            throw new APIException($"Login failed: {await response.Content.ReadAsStringAsync(token)}");
+        if (response.HasHttpError)
+            throw new APIException($"Login failed: {response.Content}");
 
         try
         {
-            return JObject.Parse(await response.Content.ReadAsStringAsync(token)).ToObject<OAuthTokenData>();
+            return JObject.Parse(response.Content).ToObject<OAuthTokenData>();
         }
         catch
         {

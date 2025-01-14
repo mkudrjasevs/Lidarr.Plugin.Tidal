@@ -1,11 +1,12 @@
 using Newtonsoft.Json;
+using NzbDrone.Common.Http;
 using TidalSharp.Data;
 
 namespace TidalSharp;
 
 public class TidalClient
 {
-    public TidalClient(string? dataDir = null)
+    public TidalClient(string? dataDir, IHttpClient httpClient)
     {
         _dataPath = dataDir;
         _userJsonPath = _dataPath == null ? null : Path.Combine(_dataPath, "lastUser.json");
@@ -13,10 +14,7 @@ public class TidalClient
         if (_dataPath != null && !Directory.Exists(_dataPath))
             Directory.CreateDirectory(_dataPath);
 
-        _httpClientHandler = new() { CookieContainer = new() };
-        _httpClient = new HttpClient(_httpClientHandler);
-        _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Linux; Android 12; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Safari/537.36");
-        _httpClient.DefaultRequestHeaders.Add("X-Tidal-Token", Globals.CLIENT_ID);
+        _httpClient = httpClient;
 
         _session = new(_httpClient);
         API = new(_httpClient, _session);
@@ -33,8 +31,7 @@ public class TidalClient
     private string? _userJsonPath;
     private string? _lastRedirectUri;
 
-    private HttpClient _httpClient;
-    private HttpClientHandler _httpClientHandler;
+    private IHttpClient _httpClient;
 
     public async Task<bool> Login(string? redirectUri = null, CancellationToken token = default)
     {
