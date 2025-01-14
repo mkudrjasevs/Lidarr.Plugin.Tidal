@@ -10,7 +10,7 @@ namespace NzbDrone.Core.Indexers.Tidal
     public class TidalRequestGenerator : IIndexerRequestGenerator
     {
         private const int PageSize = 100;
-        private const int MaxPages = 30;
+        private const int MaxPages = 3;
         public TidalIndexerSettings Settings { get; set; }
         public Logger Logger { get; set; }
 
