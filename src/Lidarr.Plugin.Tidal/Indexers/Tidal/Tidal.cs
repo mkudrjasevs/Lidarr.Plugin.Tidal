@@ -16,7 +16,7 @@ namespace NzbDrone.Core.Indexers.Tidal
         public override bool SupportsRss => false;
         public override bool SupportsSearch => true;
         public override int PageSize => 100;
-        public override TimeSpan RateLimit => new(0);
+        public override TimeSpan RateLimit => TimeSpan.FromSeconds(2);
 
         private readonly ITidalProxy _tidalProxy;
 

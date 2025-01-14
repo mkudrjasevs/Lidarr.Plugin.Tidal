@@ -111,6 +111,13 @@ public class API
 
         var response = await _httpClient.ProcessRequestAsync(request);
 
+        // this is a side-precaution, in my testing it wouldn't happen assuming lidarr is properly rate limiting
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            await Task.Delay(Random.Shared.Next(100, 1000));
+            return await Call(method, path, formParameters, urlParameters, headers, baseUrl, token);
+        }
+
         string resp = response.Content;
         JObject json = JObject.Parse(resp);
 
