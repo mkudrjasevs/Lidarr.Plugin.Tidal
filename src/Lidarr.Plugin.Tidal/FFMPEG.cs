@@ -17,14 +17,14 @@ internal class FFMPEG
 
     public static void ConvertWithoutReencode(string input, string output)
     {
-        var (exitCode, _, errorOutput, a) = Call("ffmpeg", $"-i {EncodeParameterArgument(input)} -vn -acodec copy {EncodeParameterArgument(output)}");
+        var (exitCode, _, errorOutput, a) = Call("ffmpeg", $"-y -i {EncodeParameterArgument(input)} -vn -acodec copy {EncodeParameterArgument(output)}");
         if (exitCode != 0)
             throw new FFMPEGException($"Conversion without re-encode failed\n{a}\n{errorOutput}");
     }
 
     public static void Reencode(string input, string output, int bitrate)
     {
-        var (exitCode, _, errorOutput, a) = Call("ffmpeg", $"-i {EncodeParameterArgument(input)} -b:a {bitrate}k {EncodeParameterArgument(output)}");
+        var (exitCode, _, errorOutput, a) = Call("ffmpeg", $"-y -i {EncodeParameterArgument(input)} -b:a {bitrate}k {EncodeParameterArgument(output)}");
         if (exitCode != 0)
             throw new FFMPEGException($"Re-encoding failed\n{a}\n{errorOutput}");
     }
@@ -47,6 +47,9 @@ internal class FFMPEG
         var output = proc.StandardOutput.ReadToEnd();
         var errorOutput = proc.StandardError.ReadToEnd();
         proc.WaitForExit(60000);
+
+        if (!proc.HasExited)
+            proc.Kill();
 
         return (proc.ExitCode, output, errorOutput, arguments);
     }
