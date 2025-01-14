@@ -10,7 +10,7 @@ namespace NzbDrone.Core.Indexers.Tidal
     public class TidalRequestGenerator : IIndexerRequestGenerator
     {
         private const int PageSize = 100;
-        private const int MaxPages = 30;
+        private const int MaxPages = 3;
         public TidalIndexerSettings Settings { get; set; }
         public Logger Logger { get; set; }
 
@@ -45,7 +45,11 @@ namespace NzbDrone.Core.Indexers.Tidal
         {
             if (DateTime.UtcNow > TidalAPI.Instance.Client.ActiveUser.ExpirationDate)
             {
-                TidalAPI.Instance.Client.IsLoggedIn().Wait(); // calls an internal function which handles refreshes if needed
+                // ensure we always have an accurate expiration date
+                if (TidalAPI.Instance.Client.ActiveUser.ExpirationDate == DateTime.MinValue)
+                    TidalAPI.Instance.Client.ForceRefreshToken().Wait();
+                else
+                    TidalAPI.Instance.Client.IsLoggedIn().Wait(); // calls an internal function which handles refreshes if needed
             }
 
             for (var page = 0; page < MaxPages; page++)

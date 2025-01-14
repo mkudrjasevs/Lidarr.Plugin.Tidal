@@ -19,12 +19,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\ext\Lidarr\src\NzbDrone.Core\Lidarr.Core.csproj" />
-    <ProjectReference Include="..\..\ext\TidalSharp\TidalSharp\TidalSharp.csproj" />
+    <ProjectReference Include="..\TidalSharp\TidalSharp.csproj" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="ILRepacker">
-    <Exec ContinueOnError="true"
-      Command="COPY &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Lidarr\plugins\TrevTV\Lidarr.Plugin.Tidal&quot;" />
+    <Exec ContinueOnError="true" Command="COPY &quot;$(TargetPath)&quot; &quot;C:\ProgramData\Lidarr\plugins\TrevTV\Lidarr.Plugin.Tidal&quot;" />
   </Target>
 
 </Project>
