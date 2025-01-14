@@ -49,7 +49,9 @@ jobs:
           sed -i'' -e "s/<AssemblyConfiguration>[\$()A-Za-z-]\+<\/AssemblyConfiguration>/<AssemblyConfiguration>${{ steps.gen_meta.outputs.branch }}<\/AssemblyConfiguration>/g" src/Directory.Build.props
           sed -i'' -e "s/<AssemblyVersion>[0-9.*]\+<\/AssemblyVersion>/<AssemblyVersion>$MINIMUM_LIDARR_VERSION<\/AssemblyVersion>/g" ext/Lidarr/src/Directory.Build.props
       - name: Build
-        run: dotnet build src/*.sln -c Release -f ${{ matrix.framework }}
+        run: |
+          dotnet restore src/*.sln
+          dotnet build src/*.sln -c Release -f ${{ matrix.framework }}
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
