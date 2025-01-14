@@ -60,15 +60,30 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Generate Changelog
+        id: generate_changelog
+        run: |
+          echo "Changelog:" > changelog.txt
+          git log --oneline $(git describe --tags --abbrev=0)..HEAD | awk '{print "- " substr($0, index($0,$2))}' >> changelog.txt
+      - name: Display Changelog
+        run: cat changelog.txt
       - name: Download Artifact (net6.0)
         uses: actions/download-artifact@v4
+      - name: Test Log
+        run: |
+          echo "Artifact: ${{ env.PLUGIN_NAME }}.net6.0.zip"
+          ls -R
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ env.PLUGIN_VERSION }}
+          tag_name: ${{ env.PLUGIN_VERSION }}
           name: ${{ env.PLUGIN_VERSION }}
           body: |
             Minimum Lidarr Version: ${{ env.MINIMUM_LIDARR_VERSION }}
+
+            $(cat changelog.txt)
           draft: true
           prerelease: false
           files: |
