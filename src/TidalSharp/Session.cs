@@ -58,6 +58,7 @@ internal class Session
     public async Task<bool> AttemptTokenRefresh(TidalUser user, CancellationToken token = default)
     {
         var request = _httpClient.BuildRequest(Globals.API_OAUTH2_TOKEN)
+                        .Post()
                         .AddFormParameter("grant_type", "refresh_token")
                         .AddFormParameter("refresh_token", user.RefreshToken)
                         .AddFormParameter("client_id", user.IsPkce ? Globals.CLIENT_ID_PKCE : Globals.CLIENT_ID)

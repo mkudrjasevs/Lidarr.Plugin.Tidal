@@ -20,10 +20,6 @@ public class API
     private Session _session;
     private TidalUser? _activeUser;
 
-    private readonly ConcurrentQueue<DateTime> _requestTimestamps = [];
-    private readonly TimeSpan _rateLimitTimeWindow = TimeSpan.FromSeconds(1);
-    internal int _rateLimitMaxRequestsPerSecond = 5;
-
     public async Task<JObject> GetTrack(string id, CancellationToken token = default) => await Call(HttpMethod.Get, $"tracks/{id}", token: token);
     public async Task<TidalLyrics?> GetTrackLyrics(string id, CancellationToken token = default)
     {
@@ -86,6 +82,12 @@ public class API
         CancellationToken token = default
     )
     {
+        // currently the method is ignored, but that doesn't matter much since it's all GET
+
+        baseUrl ??= Globals.API_V1_LOCATION;
+
+        var request = _httpClient.BuildRequest(baseUrl).Resource(path);
+
         headers ??= [];
         urlParameters ??= [];
         urlParameters["sessionId"] = _activeUser?.SessionID ?? "";
@@ -95,22 +97,9 @@ public class API
         if (_activeUser != null)
             headers["Authorization"] = $"{_activeUser.TokenType} {_activeUser.AccessToken}";
 
-        baseUrl ??= Globals.API_V1_LOCATION;
+        foreach (var param in urlParameters)
+            request = request.AddQueryParam(param.Key, param.Value, true);
 
-        var apiUrl = CombineUrl(baseUrl, path);
-
-        var stringBuilder = new StringBuilder(apiUrl);
-        for (int i = 0; i < urlParameters.Count; i++)
-        {
-            var start = i == 0 ? "?" : "&";
-            var key = WebUtility.UrlEncode(urlParameters.ElementAt(i).Key);
-            var value = WebUtility.UrlEncode(urlParameters.ElementAt(i).Value);
-            stringBuilder.Append(start + key + "=" + value);
-        }
-
-        apiUrl = stringBuilder.ToString();
-
-        var request = _httpClient.BuildRequest(apiUrl);
         if (formParameters != null)
         {
             foreach (var param in formParameters)

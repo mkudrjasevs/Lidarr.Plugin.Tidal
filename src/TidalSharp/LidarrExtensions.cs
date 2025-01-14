@@ -10,7 +10,8 @@ internal static class LidarrExtensions
     {
         var builder =  new HttpRequestBuilder(baseUrl)
         {
-            LogResponseContent = true
+            LogResponseContent = true,
+            SuppressHttpError = true
         };
         return builder.SetHeader("X-Tidal-Token", Globals.CLIENT_ID);
     }
