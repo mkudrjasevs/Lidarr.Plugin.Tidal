@@ -55,3 +55,25 @@ jobs:
         with:
           name: ${{ env.PLUGIN_NAME }}.${{ matrix.framework }}
           path: ./_plugins/net6.0/${{ env.PLUGIN_NAME }}/${{ env.PLUGIN_NAME }}.*
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifact (net6.0)
+        uses: actions/download-artifact@v2
+        with:
+          name: net6.0
+      - uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.PLUGIN_VERSION }}
+          commitish: ${{ env.GITHUB_SHA }}
+          name: ${{ env.PLUGIN_VERSION }}
+          body: >
+            Minimum Lidarr Version: ${{ env.MINIMUM_LIDARR_VERSION }}
+          draft: true
+          prerelease: false
+          files: >
+            ${{ env.PLUGIN_NAME }}.net6.0.zip
+          gzip: false
