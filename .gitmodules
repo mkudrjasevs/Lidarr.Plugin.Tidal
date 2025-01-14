@@ -1,3 +1,4 @@
-[submodule "ext/TidalSharp"]
-	path = ext/TidalSharp
-	url = https://github.com/TrevTV/TidalSharp
+[submodule "ext/Lidarr"]
+	path = ext/Lidarr
+	url = https://github.com/Lidarr/Lidarr
+	branch = plugins
