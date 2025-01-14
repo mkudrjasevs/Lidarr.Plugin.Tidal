@@ -64,6 +64,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          tags: true
       - name: Generate Changelog
         id: generate_changelog
         run: |
@@ -73,19 +76,14 @@ jobs:
         run: cat changelog.txt
       - name: Download Artifact (net6.0)
         uses: actions/download-artifact@v4
-      - name: Test Log
-        run: |
-          echo "Artifact: ${{ env.PLUGIN_NAME }}.net6.0.zip"
-          ls -R
+      - name: Rename Artifact
+        run: mv ${{ env.PLUGIN_NAME }}.${{ matrix.framework }} ${{ env.PLUGIN_NAME }}.net6.0.zip
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.PLUGIN_VERSION }}
           name: ${{ env.PLUGIN_VERSION }}
-          body: |
-            Minimum Lidarr Version: ${{ env.MINIMUM_LIDARR_VERSION }}
-
-            $(cat changelog.txt)
+          body_path: changelog.txt
           draft: true
           prerelease: false
           files: |
