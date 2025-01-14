@@ -74,10 +74,12 @@ jobs:
           git log --oneline $(git describe --tags --abbrev=0)..HEAD | awk '{print "- " substr($0, index($0,$2))}' >> changelog.txt
       - name: Display Changelog
         run: cat changelog.txt
-      - name: Download Artifact (net6.0)
-        uses: actions/download-artifact@v4
-      - name: Rename Artifact
-        run: mv ${{ env.PLUGIN_NAME }}.net6.0 ${{ env.PLUGIN_NAME }}.net6.0.zip
+      - name: Download Artifact
+        uses: dawidd6/action-download-artifact@v7
+        with:
+          name: ${{ env.PLUGIN_NAME }}.net6.0
+          skip_unpack: true
+          if_no_artifact_found: warn
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
