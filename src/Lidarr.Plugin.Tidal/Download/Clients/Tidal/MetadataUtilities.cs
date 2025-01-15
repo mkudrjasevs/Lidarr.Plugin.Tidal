@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
+using TidalSharp;
 
 namespace NzbDrone.Core.Download.Clients.Tidal
 {
@@ -13,9 +14,10 @@ namespace NzbDrone.Core.Download.Clients.Tidal
         {
             var rawReleaseDate = tidalAlbum["releaseDate"]?.ToString() ?? tidalAlbum["streamStartDate"]?.ToString();
             var releaseDate = !string.IsNullOrEmpty(rawReleaseDate) ? DateTime.Parse(rawReleaseDate, CultureInfo.InvariantCulture) : DateTime.MinValue;
+
             return GetFilledTemplate_Internal(template,
-                tidalPage["title"]!.ToString(),
-                tidalPage["album"]!["title"]!.ToString(),
+                API.CompleteTitleFromPage(tidalPage),
+                API.CompleteTitleFromPage(tidalAlbum),
                 tidalAlbum["artist"]!["name"]!.ToString(),
                 tidalPage["artist"]!["name"]!.ToString(),
                 tidalAlbum["artists"]!.Select(a => a["name"]!.ToString()).ToArray(),

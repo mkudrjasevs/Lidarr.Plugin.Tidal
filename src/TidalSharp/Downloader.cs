@@ -145,8 +145,8 @@ public class Downloader
         byte[]? albumArt = null;
         try { albumArt = await GetImageBytes(trackData["album"]!["cover"]!.ToString(), coverResolution, token); } catch (UnavailableMediaException) { }
 
-        track.Tag.Title = trackData["title"]!.ToString();
-        track.Tag.Album = trackData["album"]!["title"]!.ToString();
+        track.Tag.Title = API.CompleteTitleFromPage(trackData);
+        track.Tag.Album = API.CompleteTitleFromPage(albumPage);
         track.Tag.Performers = trackData["artists"]!.Select(a => a["name"]!.ToString()).ToArray();
         track.Tag.AlbumArtists = albumPage["artists"]!.Select(a => a["name"]!.ToString()).ToArray();
         string? rawReleaseDate = albumPage["releaseDate"]?.ToString() ?? albumPage["streamStartDate"]?.ToString();

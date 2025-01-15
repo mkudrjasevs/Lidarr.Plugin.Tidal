@@ -161,20 +161,13 @@ public class API
         return json;
     }
 
-    private static string CombineUrl(params string[] urls)
+    public static string CompleteTitleFromPage(JToken page)
     {
-        var builder = new StringBuilder();
-        foreach (var url in urls)
-        {
-            builder.Append(url.TrimStart('/').TrimEnd('/'));
-            builder.Append('/');
-        }
-
-        string finalUrl = builder.ToString();
-
-        if (!urls.Last().EndsWith('/'))
-            finalUrl = finalUrl.TrimEnd('/');
-
-        return finalUrl;
+        var title = page["title"]!.ToString();
+        var version = page["version"]?.ToString();
+        // we do the contains check as for whatever reason some albums (at least the one i looked at; 311544258) have the version already
+        if (!string.IsNullOrEmpty(version) && !title.Contains(version, StringComparison.InvariantCulture))
+            title = $"{title} ({version})";
+        return title;
     }
 }
