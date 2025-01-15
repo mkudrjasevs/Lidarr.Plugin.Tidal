@@ -46,9 +46,8 @@ internal class FFMPEG
         proc.Start();
         var output = proc.StandardOutput.ReadToEnd();
         var errorOutput = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(60000);
 
-        if (!proc.HasExited)
+        if (!proc.WaitForExit(60000))
             proc.Kill();
 
         return (proc.ExitCode, output, errorOutput, arguments);
