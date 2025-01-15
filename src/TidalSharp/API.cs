@@ -102,6 +102,7 @@ public class API
 
         if (formParameters != null)
         {
+            request = request.Post();
             foreach (var param in formParameters)
                 request = request.AddFormParameter(param.Key, param.Value);
         }

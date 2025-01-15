@@ -93,6 +93,7 @@ internal class Session
             throw new InvalidURLException("Authorization code not found in the redirect URL.");
 
         var request = _httpClient.BuildRequest(Globals.API_OAUTH2_TOKEN)
+                        .Post()
                         .AddFormParameter("code", code)
                         .AddFormParameter("client_id", Globals.CLIENT_ID_PKCE)
                         .AddFormParameter("grant_type", "authorization_code")
