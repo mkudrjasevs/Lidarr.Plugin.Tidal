@@ -120,7 +120,7 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
             var duration = page["duration"]!.Value<int>();
 
             var ext = (await TidalAPI.Instance.Client.Downloader.GetExtensionForTrack(track, Bitrate)).TrimStart('.');
-            var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _tidalAlbum), MetadataUtilities.GetFilledTemplate("%track% - %volume% - %title%.%ext%", ext, page, _tidalAlbum));
+            var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/%volume%/", ext, page, _tidalAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _tidalAlbum));
             var outDir = Path.GetDirectoryName(outPath)!;
 
             DownloadFolder = outDir;
