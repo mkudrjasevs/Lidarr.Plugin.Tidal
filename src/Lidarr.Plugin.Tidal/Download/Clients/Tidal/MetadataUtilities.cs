@@ -22,11 +22,13 @@ namespace NzbDrone.Core.Download.Clients.Tidal
                 tidalPage!["artists"]!.Select(a => a["name"]!.ToString()).ToArray(),
                 $"{(int)tidalPage["trackNumber"]!:00}",
                 tidalAlbum["numberOfTracks"]!.ToString(),
+                $"{(int)tidalPage["volumeNumber"]!:00}",
+                tidalAlbum["numberOfVolumes"]!.ToString(),
                 releaseDate.Year.ToString(CultureInfo.InvariantCulture),
                 ext);
         }
 
-        private static string GetFilledTemplate_Internal(string template, string title, string album, string albumArtist, string artist, string[] albumArtists, string[] artists, string track, string trackCount, string year, string ext)
+        private static string GetFilledTemplate_Internal(string template, string title, string album, string albumArtist, string artist, string[] albumArtists, string[] artists, string track, string trackCount, string volume, string volumeCount, string year, string ext)
         {
             StringBuilder t = new(template);
             ReplaceC("%title%", title);
@@ -37,6 +39,8 @@ namespace NzbDrone.Core.Download.Clients.Tidal
             ReplaceC("%artists%", string.Join("; ", artists));
             ReplaceC("%track%", track);
             ReplaceC("%trackcount%", trackCount);
+            ReplaceC("%volume%", volume);
+            ReplaceC("%volumecount%", volumeCount);
             ReplaceC("%ext%", ext);
             ReplaceC("%year%", year);
 

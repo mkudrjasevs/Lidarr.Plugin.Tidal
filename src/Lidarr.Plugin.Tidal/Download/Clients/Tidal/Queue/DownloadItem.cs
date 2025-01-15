@@ -114,13 +114,13 @@ namespace NzbDrone.Core.Download.Clients.Tidal.Queue
         private async Task DoTrackDownload(string track, TidalSettings settings, CancellationToken cancellation = default)
         {
             var page = await TidalAPI.Instance.Client.API.GetTrack(track, cancellation);
-            var songTitle = page["title"]!.ToString();
+            var songTitle = API.CompleteTitleFromPage(page);
             var artistName = page["artist"]!["name"]!.ToString();
             var albumTitle = page["album"]!["title"]!.ToString();
             var duration = page["duration"]!.Value<int>();
 
             var ext = (await TidalAPI.Instance.Client.Downloader.GetExtensionForTrack(track, Bitrate)).TrimStart('.');
-            var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _tidalAlbum), MetadataUtilities.GetFilledTemplate("%track% - %title%.%ext%", ext, page, _tidalAlbum));
+            var outPath = Path.Combine(settings.DownloadPath, MetadataUtilities.GetFilledTemplate("%albumartist%/%album%/", ext, page, _tidalAlbum), MetadataUtilities.GetFilledTemplate("%track% - %volume% - %title%.%ext%", ext, page, _tidalAlbum));
             var outDir = Path.GetDirectoryName(outPath)!;
 
             DownloadFolder = outDir;
