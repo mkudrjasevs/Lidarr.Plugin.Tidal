@@ -154,6 +154,8 @@ public class Downloader
         track.Tag.Year = (uint)releaseDate.Year;
         track.Tag.Track = uint.Parse(trackData["trackNumber"]!.ToString());
         track.Tag.TrackCount = uint.Parse(albumPage["numberOfTracks"]!.ToString());
+        track.Tag.Disc = uint.Parse(trackData["volumeNumber"]!.ToString());
+        track.Tag.DiscCount = uint.Parse(albumPage["numberOfVolumes"]!.ToString());
         if (albumArt != null)
             track.Tag.Pictures = [new TagLib.Picture(new TagLib.ByteVector(albumArt))];
         track.Tag.Lyrics = lyrics;
