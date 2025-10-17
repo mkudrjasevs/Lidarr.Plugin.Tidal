@@ -33,7 +33,7 @@ namespace NzbDrone.Plugin.Tidal
         {
             parameters ??= new();
             parameters["sessionId"] = _client.ActiveUser?.SessionID ?? "";
-            parameters["countryCode"] = _client.ActiveUser?.CountryCode ?? "";
+            parameters["countryCode"] = "LV";
             if (!parameters.ContainsKey("limit"))
                 parameters["limit"] = "1000";
 
