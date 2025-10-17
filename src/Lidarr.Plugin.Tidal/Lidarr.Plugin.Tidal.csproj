@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<PropertyGroup>
-		<MinimumLidarrVersion>2.2.4.4129</MinimumLidarrVersion>
+		<MinimumLidarrVersion>3.0.0.4856</MinimumLidarrVersion>
 		<SourceFile>$(SolutionDir)../ext/Lidarr/src/Directory.Build.props</SourceFile>
 		<BackupFile>$(SourceFile).bak</BackupFile>
 	</PropertyGroup>
